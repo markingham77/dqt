@@ -14,6 +14,8 @@ user/
 cache/snowflake/*
 !*.gitkeep
 
+
+
 *.ipynb
 
 *.png
@@ -24,7 +26,7 @@ cache/snowflake/*
 *.bak
 
 *.csv
-
+!test.csv
 # pdfs
 *.pdf
 

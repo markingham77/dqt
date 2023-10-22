@@ -14,6 +14,47 @@ import duckdb
 from duckdb import CatalogException
 from pathlib import Path
 import shutil
+import numpy as np
+
+def create_test_data():
+    """
+    creates a test.csv data file which we can run tests against and users can practice with
+    """
+    regions = ['US','GB','DE','IT','ES','FR']
+    sources = ['css','direct','organic','app']
+    dates = pd.date_range(start='2022-01-01',periods=21,freq='M')
+
+    cnt=0
+    for region in regions:
+        for source in sources:
+            raw_orders = list(np.floor(np.random.uniform(size=(len(dates),1))*100))
+            orders = [x[0] for x in raw_orders]
+            gmv = list([100*x[0]*np.random.uniform() for x in raw_orders],)
+            # print(orders)
+            # print(gmv)
+            # region = [region for x in raw_orders]
+            # source = [source for x in raw_orders]
+            df_new = pd.DataFrame({
+                'dates': dates,
+                'orders': orders,
+                'gmv': gmv,
+                'region': region,
+                'source': source
+            })
+            if cnt==0:
+                df = df_new
+            else:
+                df=pd.concat([df,df_new])
+            cnt+=1  
+    outfile = os.path.join(Path(__file__).parents[1],'test.csv')
+    df = df.round({'orders': 0, 'gmv': 2})    
+    df['orders'] = df['orders'].astype(int) 
+    df.to_csv(outfile)    
+    
+                      
+    return df
+
+
 
 def set_workdir(name):
     """
