@@ -68,7 +68,9 @@ from dqt import Query, test_data_file_full_path
 
 query = Query(query="select * from '{{table}}' limit 10;",table=test_data_file_full_path())
 query
+```
 
+```
 Class: Query (Data query tool)
 
 sql: sql from string (len: 101)       
