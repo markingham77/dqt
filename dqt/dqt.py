@@ -13,22 +13,110 @@ import uuid
 import duckdb
 from duckdb import CatalogException
 from pathlib import Path
+import shutil
+
+def set_workdir(name):
+    """
+    sets the working directory.  You probably don't want the default, which is a subdir
+    of dqt within site-packages.  You can set this to be something more memorable, such
+    as '/User/<user>/Documents'
+    """
+    outfile = open("new.env", "w") 
+    has_work_dir=False
+    for line in open(os.path.join(Path(__file__).parents[1],'.env'), "r"): 
+        if line.strip().startswith('WORK_DIR'):
+            newline = f'WORK_DIR = \'{name}\''
+            outfile.write(newline) # write in new file
+            has_work_dir=True
+        else:    
+            outfile.write(line) # write in new file
+    if has_work_dir==False:
+        outfile.write(f'\nWORK_DIR = \'{name}\'')
+    outfile.close() 
+    shutil.copyfile(os.path.join(Path(__file__).parents[1],'.env'), 'bak.env')
+    os.remove(os.path.join(Path(__file__).parents[1],'.env'))
+    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[1],'.env'))
+    os.remove('new.env')
+    os.remove('bak.env')
+
+    load_dotenv(
+            Path(find_dotenv()),
+            override=True
+        ) 
+    setup_local_dirs()
+
+def workspace(name):
+    """
+    sets or creates the workspace for the provided name.  If not an existing workspace 
+    then one is created.  This function sets the environment variable, "WORKSPACE" and 
+    changes its value in the .env file
+    """
+    outfile = open("new.env", "w") 
+    for line in open(os.path.join(Path(__file__).parents[1],'.env'), "r"): 
+        if line.strip().startswith('WORKSPACE'):
+            newline = f'WORKSPACE = \'{name}\''
+            outfile.write(newline) # write in new file
+        else:    
+            outfile.write(line) # write in new file
+    outfile.close() 
+    shutil.copyfile(os.path.join(Path(__file__).parents[1],'.env'), 'bak.env')
+    os.remove(os.path.join(Path(__file__).parents[1],'.env'))
+    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[1],'.env'))
+
+    load_dotenv(
+        Path(find_dotenv()),
+        override=True
+    ) 
+    setup_local_dirs()
 
 
+def env_reload():
+    load_dotenv(
+        Path(find_dotenv()),
+        override=True
+    ) 
+    setup_local_dirs()
+
+def env_edit():
+    filename = os.path.join(Path(__file__).parents[1],'.env')
+    os.system(f'open {filename}') 
+
+    load_dotenv(
+        Path(find_dotenv()),
+        override=True
+    ) 
+    setup_local_dirs()
+
+    # load_dotenv(
+    #         Path(find_dotenv())
+    #     )  # find .env automagically by walking up directories until it's found
+    
 
 def setup_local_dirs():
     load_dotenv(
             Path(find_dotenv())
         )  # find .env automagically by walking up directories until it's found
 
-    if "USER_DIR" not in os.environ:
-        user_dir = os.path.join(Path(__file__).parents[1],'user')
+    if "WORK_DIR" not in os.environ:
+        ws_dir = os.path.join(Path(__file__).parents[1],'workspaces')
+    else:
+        ws_dir = os.environ['WORK_DIR']    
+    if not os.path.exists(ws_dir):
+        os.mkdir(ws_dir)
+    if "WORKSPACE" not in os.environ:
+        user_dir = os.path.join(ws_dir,'main')
+        if not os.path.exists(user_dir):
+            os.mkdir(user_dir)
     else:        
-        user_dir = os.getenv("USER_DIR")    
+        user_dir = os.getenv("WORKSPACE")    
         if len(user_dir)==0:
-            user_dir = os.path.join(Path(__file__).parents[1],'user')
+            user_dir = os.path.join(ws_dir,'main')
+        else:
+            if "/" not in user_dir:
+                user_dir = os.path.join(ws_dir,user_dir)    
     if not os.path.exists(user_dir):
         os.mkdir(user_dir)
+
     template_dir = os.path.join(user_dir,'templates')
     if not os.path.exists(template_dir):
         os.mkdir(template_dir)
@@ -71,7 +159,8 @@ def setup_env():
         with open(os.path.join(Path(__file__).parents[1],'.env'),'w') as f:
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
-USER_DIR = ''""")
+WORK_DIR = ''
+WORKSPACE = ''""")
 
 user_dir = setup_local_dirs()
 setup_env()
