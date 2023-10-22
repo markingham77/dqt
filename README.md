@@ -64,10 +64,10 @@ DQT can change your working directory and the workspace name.  This offers an ef
 ### Example 1: simple parameterized sql query string
 ```
 # import the Query class
-from dqt import Query
+from dqt import Query, get_test_data_file
 
-q=Query("select {{field_1}}, {{field_2}} from lyst_analytics.union_touch_points limit {{limit}}", field_1="ultimate_id", field_2="event_timestamp", limit="10")
-q
+query = Query(query="select * from '{{table}}' limit 10;",table=get_test_data_file())
+query
 
 Class: Query (Data query tool)
 
@@ -100,91 +100,48 @@ q.load() # will load from cache if it can, otherwise from snowflake
 
 More specifically:
 - load() will return data from a locally cached .csv file, if present, if not then it will call run()
-- run() will run the query on snowflake, or via the looker api, if the [query is a Look id](#example-3:-looker) and then run() will cache the result in a local csv file.
+- run() will run the query on snowflake and then run() will cache the result in a local csv file.
 
 Both run() and load() also populate the .csv property of the Query object:
 
 ```
 q.csv
 
-<location of your repo>/cache/snowflake/aggregate_user_data__segments__country/data.csv'
+<location of your workspace>/cache/snowflake/aggregate_user_data__segments__country/data.csv'
 ```
 
 and they also populate the .df field of the Query object, which is pandas dataframe of the query result
 
 
 ### Example 2: parameterized sql query template
-There are example templates in [sql/templates](sql/templates).  You can create your own templates in [user/templates](user/templates).  Feel free to copy the examples into here and hack away.  DQT searches for templates first in your workspace and secondly in sql/templates, plus it searches for any includes in your workspace.  Let's use the [aggregate_user_data.sql](sql/templates/aggregate_user_data.sql) template.  Here's a preview:
-
+There are example templates in [workspaces/main/templates](workspaces/main/templates).  You can create your own templates in your desired workspace [workspaces/main/templates](workspaces/main/templates).  Feel free to copy the examples into here and hack away.  DQT searches for templates and any includes in your workspace.  Let's use the [test.sql](workspaces/main/templates/test.sql) template.  Here's a preview:
 ```
-/*
-returns various aggregates across various segments, such as countries and usership.  Aggregates include:
-
-    - counts of various types of user (such as engaged and active)
-    - counts of custmoers, ie converts
-    - conversion rates
-    - orders
-    - LTV
-    - GMV
-
-*/
-
-{% extends "base.sql" %}
-{% block main %}
-{% set this = ({
-    "segments":["country","traffic_source"]})
-%}
-
-
-with aggs as (
-    select
-        DATE_TRUNC(MONTH, utp.event_timestamp)::date AS month_ds
-        {% if "country" in segments|default(this.segments) %}
-            ,IFF(fct.on_lyst_first_geoip_country IN ('GB', 'AU', 'CA', 'US', 'DE', 'IT', 'FR'), fct.on_lyst_first_geoip_country, IFF(fct.on_lyst_first_geoip_country is NULL, 'RoW - NULL', 'RoW')) AS major_mkt
-        {% endif %}
-        {% if "traffic_source" in segments|default(this.segments) %}
-            {% include 'first_traffic_source.sql' %}
-        {% endif %}
-    ...
-    ...
-    ...
-    from
-        {{ tables.utp }} utp
-    left join 
-        {{ tables.fct }} fct
-        on fct.ultimate_id = utp.ultimate_id
-    LEFT JOIN {{ tables.r }} AS r
-        ON r.month::DATE = DATE_TRUNC(MONTH, utp.event_timestamp)::DATE        
-    WHERE
-        utp.event_timestamp::DATE >= '{{min_query_date |default(defaults.min_query_date) }}' AND utp.event_timestamp::DATE <= '{{max_query_date |default(defaults.max_query_date)}}'
-    GROUP BY 
-        month_ds
-        {% if "country" in segments|default(this.segments) %}
-            ,major_mkt
-        {% endif %}
-        {% if "traffic_source" in segments|default(this.segments) %}
-            ,first_traffic_source
-        {% endif %}
-    order by
-    1 
-)
-select * from aggs;
-{% endblock main %}
+WITH stage AS
+  (SELECT dates,
+          orders,
+          gmv,
+          region,
+          SOURCE
+   FROM read_csv_auto('<workspace>/test.csv', header=TRUE)
+   WHERE dates>'2023-01-01'
+     AND dates<'2023-09-30' )
+SELECT *
+FROM stage;
 ```
 
-A few things here, relating to jinja.  Firstly this template extends a base templates, [base.sql](sql/templates/base.sql) which means it inherits some values from there, in particular tables, such as **{{ tables.utp }}**.
+A few things here, relating to jinja.  Firstly this template extends a base templates, [base.sql](workspaces/main/templates/base.sql) which means it inherits some values from there.
+
 There are also some default parameters set by the **{% set ... %}** clause at the top of template, which are then used by the **default** filter.  This ensures that the sql will compile even if not all parameters are set by the Query object, This template also uses **{% include ... %}** which imports SQL snippets.  For more on jinja templating see the [jinja docs](https://jinja.palletsprojects.com/en/3.1.x/templates/#base-template).
 
 
 To run the template:
 ```
-q=Query('aggregate_user_data.sql',segments=["country"])
+q=Query('test.sql', min_query_date='2023-01-01', table=test_data_file_full_path())
 q.run()
 ```
+will run the query on the test.cs data from '2023-01-01' to '2024-12-31'.
 
-will run the query from '2023-09-01' to '2024-12-31' (as set in the base template) but only group by country (as set by the call to Query).
-
-Because DXT uses jinja (the same templating technology behind DBT) then the sky is the limit in terms of complexity - for example, you can use for loops, conditionals and macros to concoct sql queries.  However, you will always be able to see the compiled SQL, by looking at the .sql property of the Query object:
+Because DQT uses jinja (the same templating technology behind DBT) then the sky is the limit in terms of complexity - for example, you can use for loops, conditionals and macros to concoct sql queries.  However, you will always be able to see the compiled SQL, by looking at the .sql property of the Query object:
 
 ```
 q.sql
@@ -204,17 +161,13 @@ q.sql.open()
 {% import 'mymacros.jinja' as mymacros %}
 ```
 
-[base.sql](sql/templates/base.sql) imports these macros so if you extend a template from base.sql then you automatically import them.  If importing by hand, DXT finds the macro files automatically so you do not need full path names.  To actually use them you reference them like so:
+[base.sql](workspaces/main/templates/base.sql) imports these macros so if you extend a template from base.sql then you automatically import them.  If importing by hand, DXT finds the macro files automatically so you do not need full path names.  To actually use them you reference them like so:
 
 <pre>
 select 
-    ...
-    
-    count(purchase_intent_id) as total_tracks,
-    {{ <b>macros.ma</b>('total_tracks',4,order='week_ds',partition='region') }} as ma_4,
-    {{ <b>macros.pct_change</b>('total_tracks',order='week_ds',partition='region')}}
-
-from core.purchase_intents
+    *,
+    {{ <b>macros.ma</b>('gmv',4,order='dates',partition='region,source') }} as ma_4
+from {{table}}
 </pre>
 
 Here is an [example template](sql/templates/simple_tracks_with_macro_example.sql) which uses macros:

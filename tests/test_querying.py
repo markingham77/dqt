@@ -65,6 +65,6 @@ def test_macro():
     assert len(query.df)>0  
 
 def test_template():
-    q=Query('test.sql', table=test_data_file_full_path())
+    q=Query('test.sql', min_query_date='2023-01-01', table=test_data_file_full_path())
     q.load()
     assert len(q.df)>0
