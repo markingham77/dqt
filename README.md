@@ -1,5 +1,5 @@
 # DQT - Data Query Tool
-A project which aides in the exploration and analysis of both local and cloud based relational, tabular data.
+A project which aides in querying of both local and cloud based relational, tabular data.
 Some things it can do:
 
 - run paramterised SQL commands; both strings and templates
