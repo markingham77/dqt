@@ -64,23 +64,20 @@ DQT can change your working directory and the workspace name.  This offers an ef
 ### Example 1: simple parameterized sql query string
 ```
 # import the Query class
-from dqt import Query, get_test_data_file
+from dqt import Query, test_data_file_full_path
 
-query = Query(query="select * from '{{table}}' limit 10;",table=get_test_data_file())
+query = Query(query="select * from '{{table}}' limit 10;",table=test_data_file_full_path())
 query
 
 Class: Query (Data query tool)
 
-sql: sql from string (len: 88)       
+sql: sql from string (len: 101)       
 template: None
-looker: None
 cache: False
 df: None
 is_cached: False
 params: 
-  field_1: ultimate_id
-  field_2: event_timestamp
-  limit: 10
+  table: <test_data_location>
 ```
 
 To see the compiled sql, look at the sql property of the Query object,q:
@@ -88,8 +85,9 @@ To see the compiled sql, look at the sql property of the Query object,q:
 ```
 q.sql
 
-select 'ultimate_id', 'event_timestamp' from lyst_analytics.union_touch_points limit 10;
-
+SELECT *
+FROM read_csv_auto(<test_data_location>, header=TRUE)
+LIMIT 10;
 ```
 
 To run the query use .run()  or .load()
@@ -107,7 +105,7 @@ Both run() and load() also populate the .csv property of the Query object:
 ```
 q.csv
 
-<location of your workspace>/cache/snowflake/aggregate_user_data__segments__country/data.csv'
+<location of your workspace>/cache/snowflake/<template_name__args>/data.csv'
 ```
 
 and they also populate the .df field of the Query object, which is pandas dataframe of the query result
@@ -116,22 +114,26 @@ and they also populate the .df field of the Query object, which is pandas datafr
 ### Example 2: parameterized sql query template
 There are example templates in [workspaces/main/templates](workspaces/main/templates).  You can create your own templates in your desired workspace [workspaces/main/templates](workspaces/main/templates).  Feel free to copy the examples into here and hack away.  DQT searches for templates and any includes in your workspace.  Let's use the [test.sql](workspaces/main/templates/test.sql) template.  Here's a preview:
 ```
-WITH stage AS
-  (SELECT dates,
-          orders,
-          gmv,
-          region,
-          SOURCE
-   FROM read_csv_auto('<workspace>/test.csv', header=TRUE)
-   WHERE dates>'2023-01-01'
-     AND dates<'2023-09-30' )
-SELECT *
-FROM stage;
+{% extends "base.sql" %}
+{% block main %}
+{% set this = ({
+        "min_query_date": "2022-09-30",
+        "max_query_date": "2023-09-30",
+    })
+%}
+
+with stage as (
+select dates, orders, gmv, region, source,
+{{ macros.ma('gmv',4,order='dates',partition='region,source') }} as gmv_ma4
+from '{{table}}'
+where dates>'{{min_query_date |default(this.min_query_date) }}'
+...
+...
 ```
 
 A few things here, relating to jinja.  Firstly this template extends a base templates, [base.sql](workspaces/main/templates/base.sql) which means it inherits some values from there.
 
-There are also some default parameters set by the **{% set ... %}** clause at the top of template, which are then used by the **default** filter.  This ensures that the sql will compile even if not all parameters are set by the Query object, This template also uses **{% include ... %}** which imports SQL snippets.  For more on jinja templating see the [jinja docs](https://jinja.palletsprojects.com/en/3.1.x/templates/#base-template).
+There are also some default parameters set by the **{% set ... %}** clause at the top of template, which are then used by the **default** filter.  This ensures that the sql will compile even if not all parameters are set by the Query object, Although not used by the test.sql, you can also include SQL snippets via  **{% include ... %}**.  For more on jinja templating see the [jinja docs](https://jinja.palletsprojects.com/en/3.1.x/templates/#base-template).
 
 
 To run the template:
@@ -161,7 +163,7 @@ q.sql.open()
 {% import 'mymacros.jinja' as mymacros %}
 ```
 
-[base.sql](workspaces/main/templates/base.sql) imports these macros so if you extend a template from base.sql then you automatically import them.  If importing by hand, DXT finds the macro files automatically so you do not need full path names.  To actually use them you reference them like so:
+[base.sql](workspaces/main/templates/base.sql) imports these macros so if you extend a template from base.sql then you automatically import them.  If importing by hand, DQT finds the macro files automatically so you do not need full path names.  To actually use them you reference them like so:
 
 <pre>
 select 
@@ -170,25 +172,14 @@ select
 from {{table}}
 </pre>
 
-Here is an [example template](sql/templates/simple_tracks_with_macro_example.sql) which uses macros:
-
-```
-q=Query('simple_tracks_with_macro_example.sql')
-q.load()
-```
-
+See the [test.sql](workspaces/main/templates/test.sql) template for an example of using macros within a template.
 
 ## Quality of cached data
 
 Finally, DQT has an inbuilt check before loading cached data, that the current compiled SQL matches the SQL that actually produced the cached data.  The only data that are cached are produced by templates that reference remote data.  Any results produced by queries involving local data will not be cached (users can always save the .df property of the Query object using .to_csv() or some other pandas dataframe "to_" method).
 
 
-
 ## Acknowledgements and contributions
 DQT was inspired in part by dbt and it's paramterized approach to SQL.  DQT aims to help bring more rigour to analysis by making calls to the database more DRY and organised, with a clear audit trail of how data was selected.
 
-DQT started life as a fork of michael's [scratch-pad repo](https://git.lystit.com/michaelrogers/scratch-pad), which includes the ability to parameterize sql strings and I then borrowed the idea of jinja templa
-
-ting from DBT.  Dtale is just a light wrapper around an excellent package, [dtale](https://github.com/man-group/dtale/tree/master/dtale) which was created and is maintainted by Man-AHL, a well known quant hedge fund.  Semantic search uses the [haystack project](https://docs.haystack.deepset.ai/docs/intro).
-
-If anyone wants to contribute then please feel free.  I suspect the most useful part for others will be the templates and any PRs related to those will be very quick to review.  I will be adding to DXT as and when the need arises but if anyone has any suggestions then please give me a shout.
+If anyone wants to contribute then please feel free to fork and PR!
