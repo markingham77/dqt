@@ -11,7 +11,6 @@ cache/snowflake/*
 !*.gitkeep
 
 *.ipynb
-!*_example.ipynb
 
 *.png
 !static/session_journey_example.png
