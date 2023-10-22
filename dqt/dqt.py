@@ -46,6 +46,8 @@ def setup_local_dirs():
     if not os.path.exists(db_cache_dir):
         os.mkdir(db_cache_dir)
 
+    return user_dir
+
     # # set up user templates and ca  
     # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user')):
     #     os.mkdir(os.path.join(Path(__file__).parents[1],'user'))
@@ -71,7 +73,7 @@ def setup_env():
 SNOWFLAKE_ROLE = ''
 USER_DIR = ''""")
 
-setup_local_dirs()
+user_dir = setup_local_dirs()
 setup_env()
 
 def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
@@ -126,10 +128,13 @@ def cache_dir(template: str='', **kwargs):
                 fn = fn + '__' + key + '__' + "|".join(val)
             else:
                 fn = fn + '__' + key + '__' + val
-    return os.path.join(str(Path(__file__).parents[1]),'user/cache/snowflake/',fn)
+
+    return os.path.join(user_dir,'cache/snowflake/',fn)
+    # return os.path.join(str(Path(__file__).parents[1]),'user/cache/snowflake/',fn)
 
 def temp_sql_compiled_template_dir():
-    return os.path.join(str(Path(__file__).parents[1]),'user/templates/compiled')
+    return os.path.join(user_dir,'templates/compiled')
+    # return os.path.join(str(Path(__file__).parents[1]),'user/templates/compiled')
 
 class QueryTemplateParams:
     """
@@ -325,18 +330,21 @@ def get_global_template_dir():
     return os.path.join(str(Path(__file__).parents[0]),'sql/templates/')
 def get_global_macros_dir():
     return os.path.join(str(Path(__file__).parents[0]),'sql/templates/macros/')
-def get_global_includes_dir():
-    return os.path.join(str(Path(__file__).parents[0]),'sql/templates/includes/')
+# def get_global_includes_dir():
+#     return os.path.join(str(Path(__file__).parents[0]),'sql/templates/includes/')
 
 
 def get_user_template_dir():
-    return os.path.join(str(Path(__file__).parents[1]),'user/templates/')
+    return os.path.join(user_dir,'templates/')
+    # return os.path.join(str(Path(__file__).parents[1]),'user/templates/')
 
 def get_user_macros_dir():
-    return os.path.join(str(Path(__file__).parents[1]),'user/templates/macros/')
+    return os.path.join(user_dir,'templates/macros/')
+    # return os.path.join(str(Path(__file__).parents[1]),'user/templates/macros/')
 
 def get_user_includes_dir():
-    return os.path.join(str(Path(__file__).parents[1]),'user/templates/includes')
+    return os.path.join(user_dir,'templates/includes/')
+    # return os.path.join(str(Path(__file__).parents[1]),'user/templates/includes')
 
 def compile(template='total_aggs.sql',*args,**kwargs):
     """
@@ -349,8 +357,8 @@ def compile(template='total_aggs.sql',*args,**kwargs):
         get_global_template_dir(),
         get_user_macros_dir(),
         get_global_macros_dir(),
-        get_user_includes_dir(),
-        get_global_includes_dir()
+        get_user_includes_dir()
+        # get_global_includes_dir()
     ]))
     if 'select' in template.lower():
         s=template
@@ -402,4 +410,4 @@ def get_example_template_names():
     """
     gets the names of all example templates - used for testing
     """
-    return [f for f in os.listdir(os.path.join(str(Path(__file__).parents[1]),'sql/templates')) if f.endswith('.sql') and f!='test.sql']
+    return [f for f in os.listdir(os.path.join(user_dir,'templates')) if f.endswith('.sql') and f!='test.sql']

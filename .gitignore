@@ -1,3 +1,6 @@
+*.sql
+mymacros.jinja
+
 looker.ini
 # Byte-compiled / optimized / DLL files
 __pycache__/
