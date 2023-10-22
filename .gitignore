@@ -1,4 +1,6 @@
 *.sql
+!base.sql
+!test.sql
 mymacros.jinja
 
 looker.ini

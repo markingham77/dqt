@@ -16,6 +16,15 @@ from pathlib import Path
 import shutil
 import numpy as np
 
+def test_data_file_full_path():
+    return os.path.join(Path(__file__).parents[1],'test.csv')
+
+def test_data_exists():
+    test_data_file = os.path.join(Path(__file__).parents[1],'test.csv')
+    if os.path.exists(test_data_file):
+        return True
+    return False
+
 def create_test_data():
     """
     creates a test.csv data file which we can run tests against and users can practice with
@@ -49,7 +58,7 @@ def create_test_data():
     outfile = os.path.join(Path(__file__).parents[1],'test.csv')
     df = df.round({'orders': 0, 'gmv': 2})    
     df['orders'] = df['orders'].astype(int) 
-    df.to_csv(outfile)    
+    df.to_csv(outfile, index=False)    
     
                       
     return df
@@ -205,6 +214,8 @@ WORKSPACE = ''""")
 
 user_dir = setup_local_dirs()
 setup_env()
+if not test_data_exists():
+    create_test_data()
 
 def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
     """connect to snowflake, ensure SNOWFLAKE_LOGIN defined in .env"""
