@@ -62,7 +62,23 @@ Your workspace is determined by the values of the **WORK_DIR**  and **WORKSPACE*
 
 This default is probably not what you want.  In many cases it is preferable to have your workspaces seperate from the site-packages where dqt was installed, for it is probably more convenient to have your workspaces somewhere under $HOME.    
 
-DQT can change your working directory and the workspace name.  This offers an efficient way to have multiple workspaces associated with different projects.  
+DQT can change your working directory and the workspace name.  This offers an efficient way to have multiple workspaces associated with different projects:
+
+```
+from dqt import set_workdir, workspace
+
+set_workdir('/tmp') # sets WORK_DIR to '/tmp'
+workspace('research') # sets workspace to '/tmp/research'
+```
+
+Alternatively, you can edit the .env file.  DQT has a utility to do this, **env_edit**:
+
+```
+from dqt import env_edit, env_reload
+
+dqt.env_edit() # will open the .env file in a text editor
+dqt.env_reload() # you need to call this in order for any changes in the .env file to be take effect
+```
 
 
 ## Query Examples
