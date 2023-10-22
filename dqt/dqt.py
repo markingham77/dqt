@@ -18,39 +18,62 @@ from pathlib import Path
 
 
 def setup_local_dirs():
-    # set up user templates and ca  
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user')):
-        os.mkdir(os.path.join(Path(__file__).parents[1],'user'))
+    load_dotenv(
+            Path(find_dotenv())
+        )  # find .env automagically by walking up directories until it's found
 
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates')):
-        os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates'))
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/compiled')):
-        os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/compiled'))
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/includes')):
-        os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/includes'))
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/macros')):
-        os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/macros'))
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/macros/mymacros.jinja')):
-        with open(os.path.join(Path(__file__).parents[1],'user/templates/macros/mymacros.jinja'),'w') as f:
+    if "USER_DIR" not in os.environ:
+        user_dir = os.path.join(Path(__file__).parents[1],'user')
+    else:        
+        user_dir = os.getenv("USER_DIR")    
+        if len(user_dir)==0:
+            user_dir = os.path.join(Path(__file__).parents[1],'user')
+    if not os.path.exists(user_dir):
+        os.mkdir(user_dir)
+    template_dir = os.path.join(user_dir,'templates')
+    if not os.path.exists(template_dir):
+        os.mkdir(template_dir)
+    for subdir in ['compiled','includes','macros']:
+        if not os.path.exists(os.path.join(template_dir,subdir)):
+            os.mkdir(os.path.join(template_dir,subdir))                                           
+    if not os.path.exists(os.path.join(template_dir,'macros/mymacros.jinja')):
+        with open(os.path.join(template_dir,'macros/mymacros.jinja'),'w') as f:
             pass        
+    
+    cache_dir = os.path.join(user_dir,'cache')
+    if not os.path.exists(cache_dir):
+        os.mkdir(cache_dir)
+    db_cache_dir = os.path.join(cache_dir,'snowflake')
+    if not os.path.exists(db_cache_dir):
+        os.mkdir(db_cache_dir)
 
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/cache')):
-        os.mkdir(os.path.join(Path(__file__).parents[1],'user/cache'))
+    # # set up user templates and ca  
+    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user')):
+    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user'))
+    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates')):
+    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates'))
+    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/compiled')):
+    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/compiled'))
+    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/includes')):
+    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/includes'))
+    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/macros')):
+    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/macros'))
+    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/cache')):
+    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/cache'))
 
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/cache/snowflake')):
-        os.mkdir(os.path.join(Path(__file__).parents[1],'user/cache/snowflake'))
+    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/cache/snowflake')):
+    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/cache/snowflake'))
 
 def setup_env():
     if not os.path.exists(os.path.join(Path(__file__).parents[1],'.env')):
         print('.env does not exist - creating unfilled .env file')
         with open(os.path.join(Path(__file__).parents[1],'.env'),'w') as f:
             f.write("""SNOWFLAKE_LOGIN = ''
-SNOWFLAKE_ROLE = ''""")
+SNOWFLAKE_ROLE = ''
+USER_DIR = ''""")
 
 setup_local_dirs()
 setup_env()
-# kill_dtales();
-
 
 def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
     """connect to snowflake, ensure SNOWFLAKE_LOGIN defined in .env"""
@@ -177,7 +200,6 @@ class Query:
         self.template=None
         self.cache = cache
         self.df = None
-        self._dtale = None
         self.core_attributes = ['template','sql','cache','df','core_attributes','query','csv']
         self.params=QueryParams(disallowed=self.core_attributes,**kwargs)
         is_template,compiled_sql=compile(self.query, **self.params.__dict__)
