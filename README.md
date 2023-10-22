@@ -57,6 +57,11 @@ DQT encourages the use of using workspaces, which are self-contained directories
 - templates: this contains SQL templates, includes and macros
 - cache: this contains cached data and their associated compiled SQL statements
 
+### Determining and setting your workspace
+Your workspace is determined by the values of the **WORK_DIR**  and **WORKSPACE** environmet variables.  **WORKSPACE** is a sub-directory of **WORK_DIR**.  The default value of **WORK_DIR** is a folder named "main" inside the "workspaces" folder of dqt.
+
+This default is probably not what you want.  In many cases it is preferable to have your workspaces seperate from the site-packages where dqt was installed, for it is probably more convenient to have your workspaces somewhere under $HOME.    
+
 DQT can change your working directory and the workspace name.  This offers an efficient way to have multiple workspaces associated with different projects.  
 
 
