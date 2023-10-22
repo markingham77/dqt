@@ -10,7 +10,6 @@ from dotenv import load_dotenv, find_dotenv
 import pandas as pd
 from pprint import pprint
 import uuid
-from decouple import config, UndefinedValueError
 import duckdb
 from duckdb import CatalogException
 from pathlib import Path
