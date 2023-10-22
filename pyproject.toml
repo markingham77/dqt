@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "dqt"
+version = "0.1.0"
+description = ""
+authors = ["Mark Ingham <mark.ingham@ly.st>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+numpy = "^1.26.1"
+pandas = "^2.1.1"
+jinja2 = "^3.1.2"
+duckdb = "^0.9.1"
+python-dotenv = "^1.0.0"
+decouple = "^0.0.7"
+pytest = "^7.4.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

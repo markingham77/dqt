@@ -1,0 +1,72 @@
+{%- macro ma(field,n,order="",partition="") %}
+{# computes n-period moving average of specified field; order should be a datetime or date type #}
+    avg({{ field }}) OVER (
+    {% if partition %}
+       PARTITION BY {{ partition }}
+    {% endif %}
+    {% if order %}
+        ORDER BY {{ order }}
+    {% endif %}    
+    ROWS BETWEEN {{ n-1 }} PRECEDING AND CURRENT ROW
+    ) 
+{% endmacro -%}
+
+{%- macro movsum(field,n,order="",partition="") %}
+{# computes n-period moving (or trailing) sum of specified field; order should be a datetime or date type #}
+    sum({{ field }}) OVER (
+    {% if partition %}
+       PARTITION BY {{ partition }}
+    {% endif %}
+    {% if order %}
+        ORDER BY {{ order }}
+    {% endif %}    
+    ROWS BETWEEN {{ n-1 }} PRECEDING AND CURRENT ROW
+    ) 
+{% endmacro -%}
+
+{% macro pct_change(field, n=1, order="", partition="") %}
+{# computes percentage change in field over n-periods for specified partition and order; order should be a datetime or date type #}
+    ({{field}}/
+        (
+            lag({{field}},{{n}}) OVER (
+                {% if partition %}
+                    PARTITION BY {{ partition }}
+                {% endif %}
+                {% if order %}
+                    ORDER BY {{ order }}
+                {% endif %}    
+            )
+        )
+    ) - 1
+{% endmacro %}
+
+{% macro cumsum(field, order="", partition="") %}
+    sum({{field}}) OVER (
+    {% if partition %}
+        PARTITION BY {{ partition }}
+    {% endif %}
+    {% if order %}
+        ORDER BY {{ order }}
+    {% endif %}
+    RANGE UNBOUNDED PRECEDING)
+{% endmacro %}
+
+
+
+{% macro bfill(field, ref) %}
+    first_value() over (
+        partition by 
+            count({{field}}) over (order by {{ref}})
+        order by 
+            {{ref}}
+    )
+{% endmacro %}
+
+{% macro ffill(field, ref) %}
+    last_value() over (
+        partition by 
+            count({{field}}) over (order by {{ref}})        
+        order by 
+            {{ref}}
+    )
+{% endmacro %}
