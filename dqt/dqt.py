@@ -1,3 +1,4 @@
+import math, random
 import sqlparse
 import snowflake.connector
 import pathlib
@@ -14,7 +15,6 @@ import duckdb
 from duckdb import CatalogException
 from pathlib import Path
 import shutil
-import numpy as np
 
 def test_data_file_full_path():
     return os.path.join(Path(__file__).parents[1],'test.csv')
@@ -36,13 +36,8 @@ def create_test_data():
     cnt=0
     for region in regions:
         for source in sources:
-            raw_orders = list(np.floor(np.random.uniform(size=(len(dates),1))*100))
-            orders = [x[0] for x in raw_orders]
-            gmv = list([100*x[0]*np.random.uniform() for x in raw_orders],)
-            # print(orders)
-            # print(gmv)
-            # region = [region for x in raw_orders]
-            # source = [source for x in raw_orders]
+            orders = [math.floor(100*random.uniform(0,1)) for i in dates] 
+            gmv = [100*x*random.uniform(0,1) for x in orders]
             df_new = pd.DataFrame({
                 'dates': dates,
                 'orders': orders,
