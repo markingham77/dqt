@@ -85,7 +85,7 @@ def set_workdir(name):
     os.remove('bak.env')
 
     load_dotenv(
-            Path(find_dotenv()),
+            Path(find_dotenv(usecwd=True)),
             override=True
         ) 
     setup_local_dirs()
@@ -109,7 +109,7 @@ def workspace(name):
     shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
 
     load_dotenv(
-        Path(find_dotenv()),
+        Path(find_dotenv(usecwd=True)),
         override=True
     ) 
     setup_local_dirs()
@@ -117,7 +117,7 @@ def workspace(name):
 
 def env_reload():
     load_dotenv(
-        Path(find_dotenv()),
+        Path(find_dotenv(usecwd=True)),
         override=True
     ) 
     setup_local_dirs()
@@ -128,7 +128,7 @@ def env_edit():
     os.system(f'open {filename}') 
 
     load_dotenv(
-        Path(find_dotenv()),
+        Path(find_dotenv(usecwd=True)),
         override=True
     ) 
     setup_local_dirs()
@@ -140,7 +140,7 @@ def env_edit():
 
 def setup_local_dirs():
     load_dotenv(
-            Path(find_dotenv())
+            Path(find_dotenv(usecwd=True))
         )  # find .env automagically by walking up directories until it's found
 
     if "WORK_DIR" not in os.environ:
@@ -217,7 +217,7 @@ def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
     """connect to snowflake, ensure SNOWFLAKE_LOGIN defined in .env"""
 
     load_dotenv(
-        Path(find_dotenv())
+        Path(find_dotenv(usecwd=True))
     )  # find .env automagically by walking up directories until it's found
 
     if "SNOWFLAKE_LOGIN" not in os.environ:
