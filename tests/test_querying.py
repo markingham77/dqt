@@ -1,4 +1,4 @@
-from dqt.dqt import Query, get_global_template_dir, get_example_template_names, create_test_data, test_data_exists, test_data_file_full_path
+from pydqt.pydqt import Query, get_global_template_dir, get_example_template_names, create_test_data, test_data_exists, test_data_file_full_path
 import os
 import shutil
 from pathlib import Path
