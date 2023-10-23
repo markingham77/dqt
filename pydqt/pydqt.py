@@ -17,10 +17,10 @@ from pathlib import Path
 import shutil
 
 def test_data_file_full_path():
-    return os.path.join(Path(__file__).parents[1],'test.csv')
+    return os.path.join(Path(__file__).parents[0],'test.csv')
 
 def test_data_exists():
-    test_data_file = os.path.join(Path(__file__).parents[1],'test.csv')
+    test_data_file = test_data_file_full_path()
     if os.path.exists(test_data_file):
         return True
     return False
@@ -50,7 +50,7 @@ def create_test_data():
             else:
                 df=pd.concat([df,df_new])
             cnt+=1  
-    outfile = os.path.join(Path(__file__).parents[1],'test.csv')
+    outfile = test_data_file_full_path()
     df = df.round({'orders': 0, 'gmv': 2})    
     df['orders'] = df['orders'].astype(int) 
     df.to_csv(outfile, index=False)    
@@ -549,10 +549,3 @@ def compile(template='total_aggs.sql',*args,**kwargs):
         if len(m)>0:
             rendered_str=rendered_str.replace(m[0],f'read_csv_auto({m[0]}, header=true)')    
         return (True,rendered_str)
-    
-
-def get_example_template_names():
-    """
-    gets the names of all example templates - used for testing
-    """
-    return [f for f in os.listdir(os.path.join(user_dir,'templates')) if f.endswith('.sql') and f!='test.sql']
