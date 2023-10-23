@@ -68,7 +68,7 @@ def set_workdir(name):
     """
     outfile = open("new.env", "w") 
     has_work_dir=False
-    for line in open(os.path.join(Path(__file__).parents[1],'.env'), "r"): 
+    for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
         if line.strip().startswith('WORK_DIR'):
             newline = f'WORK_DIR = \'{name}\''
             outfile.write(newline) # write in new file
@@ -78,9 +78,9 @@ def set_workdir(name):
     if has_work_dir==False:
         outfile.write(f'\nWORK_DIR = \'{name}\'')
     outfile.close() 
-    shutil.copyfile(os.path.join(Path(__file__).parents[1],'.env'), 'bak.env')
-    os.remove(os.path.join(Path(__file__).parents[1],'.env'))
-    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[1],'.env'))
+    shutil.copyfile(os.path.join(Path(__file__).parents[0],'.env'), 'bak.env')
+    os.remove(os.path.join(Path(__file__).parents[0],'.env'))
+    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
     os.remove('new.env')
     os.remove('bak.env')
 
@@ -97,16 +97,16 @@ def workspace(name):
     changes its value in the .env file
     """
     outfile = open("new.env", "w") 
-    for line in open(os.path.join(Path(__file__).parents[1],'.env'), "r"): 
+    for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
         if line.strip().startswith('WORKSPACE'):
             newline = f'WORKSPACE = \'{name}\''
             outfile.write(newline) # write in new file
         else:    
             outfile.write(line) # write in new file
     outfile.close() 
-    shutil.copyfile(os.path.join(Path(__file__).parents[1],'.env'), 'bak.env')
-    os.remove(os.path.join(Path(__file__).parents[1],'.env'))
-    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[1],'.env'))
+    shutil.copyfile(os.path.join(Path(__file__).parents[0],'.env'), 'bak.env')
+    os.remove(os.path.join(Path(__file__).parents[0],'.env'))
+    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
 
     load_dotenv(
         Path(find_dotenv()),
@@ -123,7 +123,8 @@ def env_reload():
     setup_local_dirs()
 
 def env_edit():
-    filename = os.path.join(Path(__file__).parents[1],'.env')
+    filename = os.path.join(Path(__file__).parents[0],'.env')
+    print(filename)
     os.system(f'open {filename}') 
 
     load_dotenv(
@@ -143,7 +144,7 @@ def setup_local_dirs():
         )  # find .env automagically by walking up directories until it's found
 
     if "WORK_DIR" not in os.environ:
-        ws_dir = os.path.join(Path(__file__).parents[1],'workspaces')
+        ws_dir = os.path.join(Path(__file__).parents[0],'workspaces')
     else:
         ws_dir = os.environ['WORK_DIR']    
     if not os.path.exists(ws_dir):
@@ -199,9 +200,9 @@ def setup_local_dirs():
     #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/cache/snowflake'))
 
 def setup_env():
-    if not os.path.exists(os.path.join(Path(__file__).parents[1],'.env')):
+    if not os.path.exists(os.path.join(Path(__file__).parents[0],'.env')):
         print('.env does not exist - creating unfilled .env file')
-        with open(os.path.join(Path(__file__).parents[1],'.env'),'w') as f:
+        with open(os.path.join(Path(__file__).parents[0],'.env'),'w') as f:
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
 WORK_DIR = ''
