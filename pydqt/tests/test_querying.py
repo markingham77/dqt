@@ -1,5 +1,9 @@
-from pydqt.pydqt import Query, get_global_template_dir, get_example_template_names, create_test_data, test_data_exists, test_data_file_full_path
+import sys
+from pydqt import Query, get_global_template_dir, create_test_data
+from pydqt import test_data_exists as does_test_data_exist
+from pydqt import test_data_file_full_path as full_path_test_data_file
 import os
+
 import shutil
 from pathlib import Path
 import pandas as pd
@@ -13,14 +17,6 @@ import numpy as np
 
 
 
-# def test_test_data():
-#     TEST_DATA = os.path.join(Path(__file__).parents[1],'test.csv')
-#     if not os.path.exists(TEST_DATA):
-#         create_test_data()
-#         assert os.path.exists(TEST_DATA), "cannot create test data"
-
-# def get_test_data_file():
-#     return os.path.join(Path(__file__).parents[0],'pydqt/test.csv')
 
 def get_test_data():
     if test_data_exists():
@@ -29,19 +25,15 @@ def get_test_data():
     else:
         df = create_test_data()
         return df
-
-    if not os.path.exists(TEST_DATA):
-        create_test_data()
-        assert os.path.exists(TEST_DATA), "cannot create test data"
     
 
 def test_sql_command():
     """
     test a sql command
     """
-    if not test_data_exists():
-        create_test_data()
-    query = Query(query="select * from '{{table}}' limit 10;",table=get_test_data_file())
+    # if not test_data_exists():
+    #     create_test_data()
+    query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
 
     query.load()
     assert len(query.df)>0  
@@ -50,7 +42,7 @@ def test_macro():
     """
     test a sql command
     """
-    if not test_data_exists():
+    if not does_test_data_exist():
         create_test_data()
     query = Query(query="""
                 select *,  
@@ -58,7 +50,7 @@ def test_macro():
                 {{macros.ma('gmv',4,order='dates',partition='region,source')}} ma_gmv,   
                 from '{{table}}' 
                 limit 10;
-            """,table=test_data_file_full_path())
+            """,table=full_path_test_data_file())
 
     query.load()
     # print(query.df.head())

@@ -42,6 +42,8 @@ PYDQT comes with some tests, which can be run from within vscode or the command 
 python -m pytest
 ```
 
+**If you installed PYDQT from pypi then you will have to change directory to the DQT package directory (probably within site-packages) and run the tests from there.**
+
 You should, hopefully see lots of green (ie tests passing).  If you do not have the snowflake or looker variables defined (see above) then you will see tests related to those failing but all other tests should pass.
 
 ## PYDQT Main Class; Query
