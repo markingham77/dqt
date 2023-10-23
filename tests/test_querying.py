@@ -19,12 +19,12 @@ import numpy as np
 #         create_test_data()
 #         assert os.path.exists(TEST_DATA), "cannot create test data"
 
-def get_test_data_file():
-    return os.path.join(Path(__file__).parents[1],'test.csv')
+# def get_test_data_file():
+#     return os.path.join(Path(__file__).parents[0],'pydqt/test.csv')
 
 def get_test_data():
     if test_data_exists():
-        TEST_DATA = get_test_data_file()
+        TEST_DATA = test_data_file_full_path()
         return pd.read_csv(TEST_DATA)
     else:
         df = create_test_data()

@@ -1,6 +1,6 @@
 {
     "python.testing.pytestArgs": [
-        "tests"
+        "pydqt"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true
