@@ -1,9 +1,12 @@
 [tool.poetry]
-name = "dqt"
+name = "pydqt"
 version = "0.1.0"
 description = ""
 authors = ["Mark Ingham <mark.ingham@ly.st>"]
 readme = "README.md"
+packages = [
+    {include = "dqt"}
+]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
