@@ -120,7 +120,7 @@ def workspace(name):
 def env_reload():
     load_dotenv(
         # Path(find_dotenv(usecwd=True)),
-        Path('.env'),                    
+        os.path.join(Path(__file__).parents[0],'.env'),                    
         override=True
     ) 
     setup_local_dirs()
@@ -132,7 +132,7 @@ def env_edit():
 
     load_dotenv(
         # Path(find_dotenv(usecwd=True)),
-        Path('.env'),                    
+        Path(filename),                    
         override=True
     ) 
     setup_local_dirs()
@@ -152,6 +152,8 @@ def setup_local_dirs():
         ws_dir = os.path.join(Path(__file__).parents[0],'workspaces')
     else:
         ws_dir = os.environ['WORK_DIR']    
+        if len(ws_dir)==0:
+            ws_dir = os.path.join(Path(__file__).parents[0],'workspaces')
     if not os.path.exists(ws_dir):
         os.mkdir(ws_dir)
     if "WORKSPACE" not in os.environ:
