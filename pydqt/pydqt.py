@@ -101,7 +101,7 @@ def workspace(name):
     has_work_space=False
     for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
         if line.strip().startswith('WORKSPACE'):
-            newline = f'WORKSPACE = \'{name}\''
+            newline = f'\nWORKSPACE = \'{name}\''
             outfile.write(newline) # write in new file
             has_work_space=True
         else:    
