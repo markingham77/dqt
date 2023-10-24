@@ -70,14 +70,14 @@ def set_workdir(name):
     has_work_dir=False
     for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
         if line.strip().startswith('WORK_DIR'):
-            newline = f'WORK_DIR = \'{name}\''
+            newline = f'\nWORK_DIR = \'{name}\''
             outfile.write(newline) # write in new file
             has_work_dir=True
         else:    
             outfile.write(line) # write in new file
     if has_work_dir==False:
         outfile.write(f'\nWORK_DIR = \'{name}\'')
-    outfile.close() 
+    outfile.close()
     shutil.copyfile(os.path.join(Path(__file__).parents[0],'.env'), 'bak.env')
     os.remove(os.path.join(Path(__file__).parents[0],'.env'))
     shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
