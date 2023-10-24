@@ -70,14 +70,14 @@ def set_workdir(name):
     has_work_dir=False
     for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
         if line.strip().startswith('WORK_DIR'):
-            newline = f'\nWORK_DIR = \'{name}\''
+            newline = f'WORK_DIR = \'{name}\'\n'
             outfile.write(newline) # write in new file
             has_work_dir=True
         else:    
             outfile.write(line) # write in new file
     if has_work_dir==False:
         outfile.write(f'\nWORK_DIR = \'{name}\'')
-    outfile.close()
+    outfile.close() 
     shutil.copyfile(os.path.join(Path(__file__).parents[0],'.env'), 'bak.env')
     os.remove(os.path.join(Path(__file__).parents[0],'.env'))
     shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
@@ -101,10 +101,12 @@ def workspace(name):
     has_work_space=False
     for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
         if line.strip().startswith('WORKSPACE'):
-            newline = f'\nWORKSPACE = \'{name}\''
+            print('here a')
+            newline = f'\nWORKSPACE = \'{name}\'\n'
             outfile.write(newline) # write in new file
             has_work_space=True
         else:    
+            print('here b')
             outfile.write(line) # write in new file
     if has_work_space==False:
         outfile.write(f'\nWORKSPACE = \'{name}\'')        
