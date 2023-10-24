@@ -98,16 +98,22 @@ def workspace(name):
     changes its value in the .env file
     """
     outfile = open("new.env", "w") 
+    has_work_space=False
     for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
         if line.strip().startswith('WORKSPACE'):
             newline = f'WORKSPACE = \'{name}\''
             outfile.write(newline) # write in new file
+            has_work_space=True
         else:    
             outfile.write(line) # write in new file
+    if has_work_space==False:
+        outfile.write(f'\nWORKSPACE = \'{name}\'')        
     outfile.close() 
     shutil.copyfile(os.path.join(Path(__file__).parents[0],'.env'), 'bak.env')
     os.remove(os.path.join(Path(__file__).parents[0],'.env'))
     shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
+    os.remove('new.env')
+    os.remove('bak.env')
 
     load_dotenv(
         # Path(find_dotenv(usecwd=True)),
