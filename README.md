@@ -10,27 +10,47 @@ Some things it can do:
 - seamlessly return results as a pandas dataframe
 
 ## Installation
-First get the repo onto your local machine:
+You can install from PyPI:
 
-- Fork this repository
-- Clone your forked repository
+```
+pip install pydqt
+```
 
-Second, install [dependencies](pyproject.toml) via poetry (like pip but with better package version management):
+or 
 
-- ensure pyenv and poetry are installed
-- then cd to the project folder and type "poetry install" (this creates a virtual environemnt in the project root and installs all dependencies in that environment)
-- open a new terminal tab (ensure you are in project root) and type "poetry shell" - this sets the virtual environment
-- type "code ." if you want to use vscode with this package
+```
+poetry add pydqt
+```
 
-PYDQT should now be set up to work with local data.  For remote data (optional), one final step is required - you need to provide your credentials so PYDQT can connect to the remote servers, such as Snowflake.  
+Or you can fork the [github repo](https://github.com/markingham77/dqt) 
 
-When you first import pydqt, it will create a .env file in the project root and you have to fill in the blanks:
+PYDQT works with local data straight out of the box.  PYDQT also has support to work with remote Snowflake servers.  To enable this, one final step is required - you need to provide your credentials so PYDQT can connect to the remote servers.  
+
+When you first import pydqt, it will create a .env file in the project root and you have to fill in the blanks.
+
+To do this use the **env_edit** utility:
+
+```
+from pydqt import env_edit
+
+env_edit()
+```
+
+A text editor will then open, allowing you to fill in the blanks:
 
 ```bash
 SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
 WORK_DIR = ''
 WORKSPACE = ''
+```
+
+When done, save and close the file then reload to ensure your changes are loaded into the appropriate environment variables:
+
+```
+from pydqt import env_reload()
+
+env_reload()
 ```
 
 The SNOWFLAKE credentials are only necessary if you want to query snowflake and the .env should not be committed to a repo.  Without the .env variables, PYDQT will still work fine with local data.
@@ -62,9 +82,7 @@ PYDQT encourages the use of using workspaces, which are self-contained directori
 ### Determining and setting your workspace
 Your workspace is determined by the values of the **WORK_DIR**  and **WORKSPACE** environmet variables.  **WORKSPACE** is a sub-directory of **WORK_DIR**.  The default value of **WORK_DIR** is a folder named "main" inside the "workspaces" folder of pydqt.
 
-This default is probably not what you want.  In many cases it is preferable to have your workspaces seperate from the site-packages where pydqt was installed, for it is probably more convenient to have your workspaces somewhere under $HOME.    
-
-PYDQT can change your working directory and the workspace name.  This offers an efficient way to have multiple workspaces associated with different projects:
+This default is probably not what you want.  In many cases it is preferable to have your workspaces seperate from the site-packages where pydqt was installed, for it is probably more convenient to have your workspaces somewhere under $HOME.  You can use the env_edit and env_reload utilities to change your workspace but PYDQT provides two shortcut functions to facilitate this; **set_workdir** and **workspace**:
 
 ```
 from pydqt import set_workdir, workspace
@@ -73,13 +91,17 @@ set_workdir('/tmp') # sets WORK_DIR to '/tmp'
 workspace('research') # sets workspace to '/tmp/research'
 ```
 
-Alternatively, you can edit the .env file.  PYDQT has a utility to do this, **env_edit**:
+If the workspace does not already exist, PYDQT will create the necessary folders for a valid workspace.  The workspace function then points PYDQT to the correct workspace.  The above commands will result in the following directory in /tmp:
 
 ```
-from pydqt import env_edit, env_reload
-
-env_edit() # will open the .env file in a text editor
-env_reload() # you need to call this in order for any changes in the .env file to be take effect
+── research
+    ├── cache
+    │   └── snowflake
+    └── templates
+        ├── compiled
+        ├── includes
+        └── macros
+          └── mymacros.jinja
 ```
 
 
@@ -181,7 +203,7 @@ q.sql.open()
 
 
 ### Example 3: Macros
-[Macros](https://jinja.palletsprojects.com/en/3.1.x/templates/#macros) are jinja constructs that allow you to write custom functions inside SQL.  [PYDQT macros](sql/templates/macros/macros.jinja) are in a single file: sql/templates/macros/macros.jinja and you can create your own in the mymacros.jinja file in the macros folder of your workspace.  To use macros in your template, you first have to import them at the top of your jinja template, like so:
+[Macros](https://jinja.palletsprojects.com/en/3.1.x/templates/#macros) are jinja constructs that allow you to write custom functions inside SQL.  [PYDQT macros](sql/templates/macros/macros.jinja) has some global macros: sql/templates/macros/macros.jinja and you can create your own local macros in mymacros.jinja (in the macros folder of your workspace, see above).  To use macros in your template, you first have to import them at the top of your jinja template, like so:
 
 ```
 {% import 'macros.jinja' as macros %}
