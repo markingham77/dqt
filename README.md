@@ -104,6 +104,23 @@ If the workspace does not already exist, PYDQT will create the necessary folders
           └── mymacros.jinja
 ```
 
+As you can see there are no templates in this workspace as it's just been created.  Your own custom templates go in the templates folder.  For example, here's the structure for the default "main" workspace that ships with PYDQT:
+
+```
+├── main
+│   ├── cache
+│   │   └── snowflake
+│   └── templates
+│       ├── base.sql
+│       ├── compiled
+│       ├── includes
+│       ├── macros
+│       │   └── mymacros.jinja
+│       └── test.sql
+```
+
+This is how your workspace should look (though you will probably have many more template .sql files in there).
+
 
 ## Query Examples
 ### Example 1: simple parameterized sql query string
