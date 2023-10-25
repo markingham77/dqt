@@ -58,6 +58,34 @@ def create_test_data():
                       
     return df
 
+def set_workspace(root='',name=''):    
+    if (name!='') & (root!=''):
+        # first rewrite .env file to reflect the root and name
+        env_file = os.path.join(Path(__file__).parents[0],'.env')
+        new_env_file = os.path.join(Path(__file__).parents[0],'new.env')
+
+        with open(env_file, 'r') as r, open(new_env_file, 'w') as w:
+            for line in r: 
+                if line.strip().startswith('WORK_DIR'): 
+                    w.write(f'WORK_DIR = \'{root}\'\n')
+                elif line.strip().startswith('WORKSPACE'): 
+                    w.write(f'WORKSPACE = \'{name}\'\n')
+                elif line.strip():
+                    w.write(line)
+        shutil.move(new_env_file, env_file)
+
+        # second rerun load_dotenv to load new env file into environment variables
+        load_dotenv(
+            # Path(find_dotenv(usecwd=True)),
+            Path(env_file),                    
+            override=True
+        ) 
+
+        # finally, setup_local_dirs to reflect new workspace
+        setup_local_dirs()
+        return
+    else:
+        return
 
 
 def set_workdir(name):
@@ -83,6 +111,7 @@ def set_workdir(name):
     shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
     os.remove('new.env')
     os.remove('bak.env')
+
 
     load_dotenv(
             # Path(find_dotenv(usecwd=True)),

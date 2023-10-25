@@ -2,6 +2,7 @@ import sys
 from pydqt import Query, get_global_template_dir, create_test_data
 from pydqt import test_data_exists as does_test_data_exist
 from pydqt import test_data_file_full_path as full_path_test_data_file
+import pydqt as dqt
 import os
 
 import shutil
@@ -56,7 +57,15 @@ def test_macro():
     # print(query.df.head())
     assert len(query.df)>0  
 
-# def test_template():
-#     q=Query('test.sql', min_query_date='2023-01-01', table=test_data_file_full_path())
-#     q.load()
-#     assert len(q.df)>0
+def test_set_workspace():
+    """
+    tests set_workspace function wihtin pydqt
+    """    
+    name='pydqt_env_delme'
+    root='/tmp'
+    if os.path.exists(f'{root}/{name}'):
+        os.remove(f'{root}/{name}')
+    dqt.set_workspace(root='/tmp',name='pydqt_env_delme')
+    assert os.path.exists(f'{root}/{name}')
+
+
