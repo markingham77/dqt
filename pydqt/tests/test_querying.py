@@ -1,8 +1,8 @@
 import sys
-from pydqt import Query, get_global_template_dir, create_test_data
-from pydqt import test_data_exists as does_test_data_exist
-from pydqt import test_data_file_full_path as full_path_test_data_file
-import pydqt as dqt
+from pydqt.pydqt import Query, get_global_template_dir, create_test_data
+from pydqt.pydqt import test_data_exists as does_test_data_exist
+from pydqt.pydqt import test_data_file_full_path as full_path_test_data_file
+import pydqt.pydqt as dqt
 import os
 
 import shutil
@@ -17,6 +17,10 @@ import numpy as np
 ########################################################################################################################
 
 
+def set_temp_workspace(root='/tmp',name='pydqt_env_delme'):
+    if os.path.exists(f'{root}/{name}'):
+        shutil.rmtree(f'{root}/{name}')
+    dqt.set_workspace(root='/tmp',name='pydqt_env_delme')
 
 
 def get_test_data():
@@ -57,15 +61,59 @@ def test_macro():
     # print(query.df.head())
     assert len(query.df)>0  
 
-def test_set_workspace():
+def test_set_workspace_exists():
     """
     tests set_workspace function wihtin pydqt
     """    
-    name='pydqt_env_delme'
     root='/tmp'
-    if os.path.exists(f'{root}/{name}'):
-        os.remove(f'{root}/{name}')
-    dqt.set_workspace(root='/tmp',name='pydqt_env_delme')
+    name='pydqt_env_delme'
+    set_temp_workspace(root=root, name=name)
     assert os.path.exists(f'{root}/{name}')
 
+def test_set_workspace_has_cache():
+    """
+    tests set_workspace function wihtin pydqt
+    """    
+    root='/tmp'
+    name='pydqt_env_delme'
+    set_temp_workspace(root=root, name=name)
+
+    assert os.path.exists(f'{root}/{name}/cache')
+
+def test_set_workspace_has_templates():
+    """
+    tests set_workspace function wihtin pydqt
+    """    
+    root='/tmp'
+    name='pydqt_env_delme'
+    set_temp_workspace(root=root, name=name)
+    assert os.path.exists(f'{root}/{name}/templates')
+
+def test_set_workspace_has_includes():
+    """
+    tests set_workspace function wihtin pydqt
+    """    
+    root='/tmp'
+    name='pydqt_env_delme'
+    set_temp_workspace(root=root, name=name)
+
+    assert os.path.exists(f'{root}/{name}/templates/includes')
+
+def test_set_workspace_has_compiled():
+    """
+    tests set_workspace function wihtin pydqt
+    """    
+    root='/tmp'
+    name='pydqt_env_delme'
+    set_temp_workspace(root=root, name=name)
+    assert os.path.exists(f'{root}/{name}/templates/compiled')
+
+def test_set_workspace_has_macros():
+    """
+    tests set_workspace function wihtin pydqt
+    """    
+    root='/tmp'
+    name='pydqt_env_delme'
+    set_temp_workspace(root=root, name=name)
+    assert os.path.exists(f'{root}/{name}/templates/macros/mymacros.jinja')
 
