@@ -59,106 +59,41 @@ def create_test_data():
     return df
 
 def set_workspace(root='',name=''):    
-    if (name!='') & (root!=''):
-        # first rewrite .env file to reflect the root and name
-        env_file = os.path.join(Path(__file__).parents[0],'.env')
-        new_env_file = os.path.join(Path(__file__).parents[0],'new.env')
-
-        with open(env_file, 'r') as r, open(new_env_file, 'w') as w:
-            for line in r: 
-                if line.strip().startswith('WORK_DIR'): 
-                    w.write(f'WORK_DIR = \'{root}\'\n')
-                elif line.strip().startswith('WORKSPACE'): 
-                    w.write(f'WORKSPACE = \'{name}\'\n')
-                elif line.strip():
-                    w.write(line)
-        shutil.move(new_env_file, env_file)
-
-        # second rerun load_dotenv to load new env file into environment variables
-        load_dotenv(
-            # Path(find_dotenv(usecwd=True)),
-            Path(env_file),                    
-            override=True
-        ) 
-
-        # finally, setup_local_dirs to reflect new workspace
-        setup_local_dirs()
-        return
-    else:
-        return
-
-
-def set_workdir(name):
     """
-    sets the working directory.  You probably don't want the default, which is a subdir
-    of dqt within site-packages.  You can set this to be something more memorable, such
-    as '/User/<user>/Documents'
+    sets the workspace environment .env file and environment variables using specified root and name params.
     """
-    outfile = open("new.env", "w") 
-    has_work_dir=False
-    for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
-        if line.strip().startswith('WORK_DIR'):
-            newline = f'WORK_DIR = \'{name}\'\n'
-            outfile.write(newline) # write in new file
-            has_work_dir=True
-        else:    
-            outfile.write(line) # write in new file
-    if has_work_dir==False:
-        outfile.write(f'\nWORK_DIR = \'{name}\'')
-    outfile.close() 
-    shutil.copyfile(os.path.join(Path(__file__).parents[0],'.env'), 'bak.env')
-    os.remove(os.path.join(Path(__file__).parents[0],'.env'))
-    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
-    os.remove('new.env')
-    os.remove('bak.env')
+    
+    if root=='':
+        root = os.path.join(Path(__file__).parents[0],'workspaces')
+    if name=='':
+        name = 'main'    
 
+    # first rewrite .env file to reflect the root and name
+    env_file = '.env'
+    new_env_file = 'new.env'
 
-    load_dotenv(
-            # Path(find_dotenv(usecwd=True)),
-            Path('.env'),            
-            override=True
-        ) 
-    setup_local_dirs()
+    with open(env_file, 'r') as r, open(new_env_file, 'w') as w:
+        for line in r: 
+            if line.strip().startswith('WORKSPACE_ROOT'): 
+                w.write(f'WORKSPACE_ROOT = \'{root}\'\n')
+            elif line.strip().startswith('WORKSPACE_NAME'): 
+                w.write(f'WORKSPACE_NAME = \'{name}\'\n')
+            elif line.strip():
+                w.write(line + '\n')
+    shutil.move(new_env_file, env_file)
 
-def workspace(name):
-    """
-    sets or creates the workspace for the provided name.  If not an existing workspace 
-    then one is created.  This function sets the environment variable, "WORKSPACE" and 
-    changes its value in the .env file
-    """
-    outfile = open("new.env", "w") 
-    has_work_space=False
-    for line in open(os.path.join(Path(__file__).parents[0],'.env'), "r"): 
-        if line.strip().startswith('WORKSPACE'):
-            newline = f'\nWORKSPACE = \'{name}\'\n'
-            outfile.write(newline) # write in new file
-            has_work_space=True
-        else:    
-            outfile.write(line) # write in new file
-    if has_work_space==False:
-        outfile.write(f'\nWORKSPACE = \'{name}\'')        
-    outfile.close() 
-    shutil.copyfile(os.path.join(Path(__file__).parents[0],'.env'), 'bak.env')
-    os.remove(os.path.join(Path(__file__).parents[0],'.env'))
-    shutil.copyfile('new.env', os.path.join(Path(__file__).parents[0],'.env'))
-    os.remove('new.env')
-    os.remove('bak.env')
+    # now reload env and setup_local_dirs
+    USER_DIR = env_reload()
 
-    load_dotenv(
-        # Path(find_dotenv(usecwd=True)),
-        Path('.env'),                    
-        override=True
-    ) 
-    setup_local_dirs()
-
+    return
 
 def env_reload():
     load_dotenv(
         # Path(find_dotenv(usecwd=True)),
-        os.path.join(Path(__file__).parents[0],'.env'),                    
+        Path('.env'),
         override=True
     ) 
-    setup_local_dirs()
+    return setup_local_dirs()
 
 def env_edit():
     filename = os.path.join(Path(__file__).parents[0],'.env')
@@ -172,38 +107,40 @@ def env_edit():
     ) 
     setup_local_dirs()
 
-    # load_dotenv(
-    #         Path(find_dotenv())
-    #     )  # find .env automagically by walking up directories until it's found
-    
+def get_ws():
+    """
+    get workspace root and name
+    """    
+    if "WORKSPACE_ROOT" not in os.environ:
+        ws_dir = os.path.join(Path(__file__).parents[0],'workspaces')
+    else:
+        ws_dir = os.environ['WORKSPACE_ROOT']    
+        if len(ws_dir)==0:
+            ws_dir = os.path.join(Path(__file__).parents[0],'workspaces')
+        else:
+            if ws_dir[0]!='/':
+                ws_dir = os.path.join(Path(__file__).parents[0],ws_dir) 
+    if "WORKSPACE_NAME" not in os.environ:
+        name = 'main'
+    else:        
+        name = os.getenv("WORKSPACE_NAME")    
+        if len(name)==0:
+            name = 'main'
+
+    return (ws_dir, name)                
 
 def setup_local_dirs():
     load_dotenv(
-            # Path(find_dotenv(usecwd=True))
             Path('.env'),                        
         )  # find .env automagically by walking up directories until it's found
 
-    if "WORK_DIR" not in os.environ:
-        ws_dir = os.path.join(Path(__file__).parents[0],'workspaces')
-    else:
-        ws_dir = os.environ['WORK_DIR']    
-        if len(ws_dir)==0:
-            ws_dir = os.path.join(Path(__file__).parents[0],'workspaces')
+    ws_dir, name = get_ws()
     if not os.path.exists(ws_dir):
         os.mkdir(ws_dir)
-    if "WORKSPACE" not in os.environ:
-        user_dir = os.path.join(ws_dir,'main')
-        if not os.path.exists(user_dir):
-            os.mkdir(user_dir)
-    else:        
-        user_dir = os.getenv("WORKSPACE")    
-        if len(user_dir)==0:
-            user_dir = os.path.join(ws_dir,'main')
-        else:
-            if "/" not in user_dir:
-                user_dir = os.path.join(ws_dir,user_dir)    
+    user_dir = os.path.join(ws_dir,name)
     if not os.path.exists(user_dir):
         os.mkdir(user_dir)
+
 
     template_dir = os.path.join(user_dir,'templates')
     if not os.path.exists(template_dir):
@@ -224,34 +161,22 @@ def setup_local_dirs():
 
     return user_dir
 
-    # # set up user templates and ca  
-    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user')):
-    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user'))
-    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates')):
-    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates'))
-    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/compiled')):
-    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/compiled'))
-    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/includes')):
-    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/includes'))
-    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/templates/macros')):
-    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/templates/macros'))
-    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/cache')):
-    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/cache'))
-
-    # if not os.path.exists(os.path.join(Path(__file__).parents[1],'user/cache/snowflake')):
-    #     os.mkdir(os.path.join(Path(__file__).parents[1],'user/cache/snowflake'))
-
 def setup_env():
-    if not os.path.exists(os.path.join(Path(__file__).parents[0],'.env')):
+    if not os.path.exists('.env'):
         print('.env does not exist - creating unfilled .env file')
-        with open(os.path.join(Path(__file__).parents[0],'.env'),'w') as f:
+        with open('.env','w') as f:
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
-WORK_DIR = ''
-WORKSPACE = ''""")
+WORKSPACE_ROOT = ''
+WORKSPACE_NAME = ''""")
 
-user_dir = setup_local_dirs()
+
+# Initial setup when pydqt is imported
+# user_dir = setup_local_dirs()
 setup_env()
+USER_DIR = env_reload()
+
+
 if not test_data_exists():
     create_test_data()
 
@@ -259,8 +184,7 @@ def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
     """connect to snowflake, ensure SNOWFLAKE_LOGIN defined in .env"""
 
     load_dotenv(
-        # Path(find_dotenv(usecwd=True))
-        Path('.env'),                    
+        Path('.env'),
     )  # find .env automagically by walking up directories until it's found
 
     if "SNOWFLAKE_LOGIN" not in os.environ:
@@ -309,12 +233,45 @@ def cache_dir(template: str='', **kwargs):
             else:
                 fn = fn + '__' + key + '__' + val
 
-    return os.path.join(user_dir,'cache/snowflake/',fn)
+    return os.path.join(USER_DIR,'cache/snowflake/',fn)
     # return os.path.join(str(Path(__file__).parents[1]),'user/cache/snowflake/',fn)
 
 def temp_sql_compiled_template_dir():
-    return os.path.join(user_dir,'templates/compiled')
+    return os.path.join(USER_DIR,'templates/compiled')
     # return os.path.join(str(Path(__file__).parents[1]),'user/templates/compiled')
+
+class Workspace:
+    """
+    Workspace class which gets current workspace upon object instantiation.
+
+    Workspace objects have two methods:
+     
+        - export: will export the workspace to a specified location
+        - publish: will publish to a specified repo (usually a public repo so users can share workspaces)
+    """
+    def __init__(self):
+        root, name = get_ws()
+        self.root = root
+        self.name = name
+        self.full_path = os.path.join(root, name)
+
+    def __repr__(self):
+        return f'Workspace(root=\'{self.root}\', name=\'{self.name}\')'
+    
+    def export(self, to='', ow=False):
+        assert to!='', f'You must specifiy a destination to export to (via \'to\' param)'
+        if ow==False:
+            assert not os.path.exists(to), f'your destination \'{to}\' already exists and ow=False so aborting.  If you want to export anyway, set ow=True.'
+        if ow:
+            if os.path.exists(to):
+                shutil.rmtree(to)
+        shutil.copytree(self.full_path,to)
+
+        print(f'{self} was successfully exported to {to}')
+
+    def publish(self, repo=''):
+        print('publish method has not been implemented yet - todo!')
+
 
 class QueryTemplateParams:
     """
@@ -515,16 +472,19 @@ def get_global_macros_dir():
 
 
 def get_user_template_dir():
-    return os.path.join(user_dir,'templates/')
+    ws_root, ws_name = get_ws()
+    return os.path.join(ws_root,ws_name,'templates')
     # return os.path.join(str(Path(__file__).parents[1]),'user/templates/')
 
 def get_user_macros_dir():
-    return os.path.join(user_dir,'templates/macros/')
-    # return os.path.join(str(Path(__file__).parents[1]),'user/templates/macros/')
+    ws_root, ws_name = get_ws()
+    return os.path.join(ws_root,ws_name,'templates/macros')
+    # return os.path.join(USER_DIR,'templates/macros/')
 
 def get_user_includes_dir():
-    return os.path.join(user_dir,'templates/includes/')
-    # return os.path.join(str(Path(__file__).parents[1]),'user/templates/includes')
+    ws_root, ws_name = get_ws()
+    return os.path.join(ws_root,ws_name,'templates/includes')
+    # return os.path.join(USER_DIR,'templates/includes/')
 
 def compile(template='total_aggs.sql',*args,**kwargs):
     """

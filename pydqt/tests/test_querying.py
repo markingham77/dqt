@@ -1,7 +1,8 @@
 import sys
-from pydqt.pydqt import Query, get_global_template_dir, create_test_data
+from pydqt.pydqt import Query, get_global_template_dir, create_test_data, setup_env
 from pydqt.pydqt import test_data_exists as does_test_data_exist
 from pydqt.pydqt import test_data_file_full_path as full_path_test_data_file
+from pydqt.pydqt import get_user_template_dir, get_user_includes_dir, get_user_macros_dir
 import pydqt.pydqt as dqt
 import os
 
@@ -116,4 +117,15 @@ def test_set_workspace_has_macros():
     name='pydqt_env_delme'
     set_temp_workspace(root=root, name=name)
     assert os.path.exists(f'{root}/{name}/templates/macros/mymacros.jinja')
+
+def test_change_of_workspace():
+    """
+    change workspace via set_workspace and then confirm that compile points to the correct dirs
+    """
+    root='/tmp'
+    name='pydqt_env_delme'
+    set_temp_workspace(root=root, name=name)
+    user_dir = get_user_template_dir()
+    # print(user_dir)
+    assert user_dir==f'{root}/{name}/templates'
 
