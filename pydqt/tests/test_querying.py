@@ -62,7 +62,7 @@ def test_macro():
     # print(query.df.head())
     assert len(query.df)>0  
 
-def test_set_workspace_exists():
+def test_set_workspace_exists_for_absolute_root():
     """
     tests set_workspace function wihtin pydqt
     """    
@@ -70,6 +70,17 @@ def test_set_workspace_exists():
     name='pydqt_env_delme'
     set_temp_workspace(root=root, name=name)
     assert os.path.exists(f'{root}/{name}')
+
+# def test_set_workspace_exists_for_relative_root():
+#     """
+#     tests set_workspace function with root that does not start with "/"
+
+#     Note: it is ultimately get_ws that deals with this by returning root
+#     """    
+#     root='research'
+#     name='pydqt_env_delme'
+#     set_temp_workspace(root=root, name=name)
+#     assert os.path.join(Path(__file__).parents[1], f'{root}/{name}') == '/'.join(dqt.get_ws())
 
 def test_set_workspace_has_cache():
     """
