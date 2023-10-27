@@ -191,6 +191,10 @@ def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
         raise EnvironmentError(
             "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
         )
+    if os["SNOWFLAKE_LOGIN"]=='':
+        raise EnvironmentError(
+            "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
+        )
     SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
 
     return snowflake.connector.connect(
