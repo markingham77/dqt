@@ -159,6 +159,8 @@ def setup_local_dirs():
     if not os.path.exists(db_cache_dir):
         os.mkdir(db_cache_dir)
 
+    
+
     return user_dir
 
 def setup_env():
