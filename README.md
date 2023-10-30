@@ -41,8 +41,8 @@ A text editor will then open, allowing you to fill in the blanks:
 ```bash
 SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
-WORK_DIR = ''
-WORKSPACE = ''
+WORKSPACE_ROOT = ''
+WORKSPACE_NAME = ''
 ```
 
 When done, save and close the file then reload to ensure your changes are loaded into the appropriate environment variables:
@@ -80,15 +80,14 @@ PYDQT encourages the use of using workspaces, which are self-contained directori
 - cache: this contains cached data and their associated compiled SQL statements
 
 ### Determining and setting your workspace
-Your workspace is determined by the values of the **WORK_DIR**  and **WORKSPACE** environmet variables.  **WORKSPACE** is a sub-directory of **WORK_DIR**.  The default value of **WORK_DIR** is a folder named "main" inside the "workspaces" folder of pydqt.
+Your workspace is determined by the values of the **WORKSPACE_ROOT**  and **WORKSPACE_NAME** environment variables.  **WORKSPACE_NAME** is a sub-directory of **WORKSPACE_ROOT**.  The default values are a folder named "workspaces" in the folder where ydqt is installed (probably site-packages) and "main" for ROOT and NAME respectively.
 
-This default is probably not what you want.  In many cases it is preferable to have your workspaces seperate from the site-packages where pydqt was installed, for it is probably more convenient to have your workspaces somewhere under $HOME.  You can use the env_edit and env_reload utilities to change your workspace but PYDQT provides two shortcut functions to facilitate this; **set_workdir** and **workspace**:
+This default is probably not what you want.  In many cases it is preferable to have your workspaces seperate from the site-packages where pydqt was installed, often it is more convenient to have your workspaces somewhere under $HOME.  You can use the env_edit and env_reload utilities to change your workspace but PYDQT provides two shortcut functions to facilitate this; **set_workdir** and **workspace**:
 
 ```
-from pydqt import set_workdir, workspace
+from pydqt import set_workspace
 
-set_workdir('/tmp') # sets WORK_DIR to '/tmp'
-workspace('research') # sets workspace to '/tmp/research'
+set_workspace(root='/tmp', name='research')
 ```
 
 If the workspace does not already exist, PYDQT will create the necessary folders for a valid workspace.  The workspace function then points PYDQT to the correct workspace.  The above commands will result in the following directory in /tmp:

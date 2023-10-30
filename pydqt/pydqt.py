@@ -159,7 +159,7 @@ def setup_local_dirs():
     if not os.path.exists(db_cache_dir):
         os.mkdir(db_cache_dir)
 
-    
+
 
     return user_dir
 
@@ -239,11 +239,13 @@ def cache_dir(template: str='', **kwargs):
             else:
                 fn = fn + '__' + key + '__' + val
 
-    return os.path.join(USER_DIR,'cache/snowflake/',fn)
+    return os.path.join(ws_root,ws_name,'cache/snowflake/',fn)
+    # return os.path.join(USER_DIR,'cache/snowflake/',fn)
     # return os.path.join(str(Path(__file__).parents[1]),'user/cache/snowflake/',fn)
 
 def temp_sql_compiled_template_dir():
-    return os.path.join(USER_DIR,'templates/compiled')
+    return os.path.join(ws_root,ws_name,'templates/compiled')
+    # return os.path.join(USER_DIR,'templates/compiled')
     # return os.path.join(str(Path(__file__).parents[1]),'user/templates/compiled')
 
 class Workspace:
