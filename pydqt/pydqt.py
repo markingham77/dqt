@@ -238,12 +238,13 @@ def cache_dir(template: str='', **kwargs):
                 fn = fn + '__' + key + '__' + "|".join(val)
             else:
                 fn = fn + '__' + key + '__' + val
-
+    ws_root, ws_name = get_ws()
     return os.path.join(ws_root,ws_name,'cache/snowflake/',fn)
     # return os.path.join(USER_DIR,'cache/snowflake/',fn)
     # return os.path.join(str(Path(__file__).parents[1]),'user/cache/snowflake/',fn)
 
 def temp_sql_compiled_template_dir():
+    ws_root, ws_name = get_ws()
     return os.path.join(ws_root,ws_name,'templates/compiled')
     # return os.path.join(USER_DIR,'templates/compiled')
     # return os.path.join(str(Path(__file__).parents[1]),'user/templates/compiled')
