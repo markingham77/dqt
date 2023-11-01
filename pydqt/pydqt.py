@@ -16,6 +16,9 @@ from duckdb import CatalogException
 from pathlib import Path
 import shutil
 
+def env_file_full_path():
+    return os.path.join(Path(__file__).parents[0],'.env')
+
 def test_data_file_full_path():
     return os.path.join(Path(__file__).parents[0],'test.csv')
 
@@ -69,7 +72,7 @@ def set_workspace(root='',name=''):
         name = 'main'    
 
     # first rewrite .env file to reflect the root and name
-    env_file = '.env'
+    env_file = env_file_full_path()
     new_env_file = 'new.env'
 
     with open(env_file, 'r') as r, open(new_env_file, 'w') as w:
@@ -90,13 +93,15 @@ def set_workspace(root='',name=''):
 def env_reload():
     load_dotenv(
         # Path(find_dotenv(usecwd=True)),
-        Path('.env'),
+        # Path('.env'),
+        env_file_full_path(),
         override=True
     ) 
     return setup_local_dirs()
 
 def env_edit():
-    filename = os.path.join(Path(__file__).parents[0],'.env')
+    # filename = os.path.join(Path(__file__).parents[0],'.env')
+    filename = env_file_full_path()
     print(filename)
     os.system(f'open {filename}') 
 
@@ -131,7 +136,8 @@ def get_ws():
 
 def setup_local_dirs():
     load_dotenv(
-            Path('.env'),                        
+            # Path('.env'),                        
+            env_file_full_path(),
         )  # find .env automagically by walking up directories until it's found
 
     ws_dir, name = get_ws()
@@ -164,9 +170,10 @@ def setup_local_dirs():
     return user_dir
 
 def setup_env():
-    if not os.path.exists('.env'):
+    filename = env_file_full_path()
+    if not os.path.exists(filename):
         print('.env does not exist - creating unfilled .env file')
-        with open('.env','w') as f:
+        with open(filename,'w') as f:
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
 WORKSPACE_ROOT = ''
@@ -186,7 +193,8 @@ def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
     """connect to snowflake, ensure SNOWFLAKE_LOGIN defined in .env"""
 
     load_dotenv(
-        Path('.env'),
+        env_file_full_path()
+        # Path('.env'),
     )  # find .env automagically by walking up directories until it's found
 
     if "SNOWFLAKE_LOGIN" not in os.environ:
