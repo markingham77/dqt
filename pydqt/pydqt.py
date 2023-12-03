@@ -61,6 +61,30 @@ def create_test_data():
                       
     return df
 
+
+def set_snowflake(login='',role=''):
+    """
+    sets snowflake credentials; login (usually an email) and role (which scopes out privileges)
+    """
+    assert login!='', 'you must specify your login'
+    assert role!='', 'you must specify your role'
+    env_file = env_file_full_path()
+    new_env_file = 'new.env'
+
+    with open(env_file, 'r') as r, open(new_env_file, 'w') as w:
+        for line in r: 
+            if line.strip().startswith('SNOWFLAKE_LOGIN'): 
+                w.write(f'SNOWFLAKE_LOGIN = \'{login}\'\n')
+            elif line.strip().startswith('SNOWFLAKE_ROLE'): 
+                w.write(f'SNOWFLAKE_ROLE = \'{role}\'\n')
+            elif line.strip():
+                w.write(line + '\n')
+    shutil.move(new_env_file, env_file)
+
+    # now reload env and setup_local_dirs
+    env_reload()
+    return
+
 def set_workspace(root='',name=''):    
     """
     sets the workspace environment .env file and environment variables using specified root and name params.
