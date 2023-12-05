@@ -62,7 +62,7 @@ def create_test_data():
     return df
 
 
-def set_snowflake(login='',role=''):
+def set_snowflake_credentials(login='',role=''):
     """
     sets snowflake credentials; login (usually an email) and role (which scopes out privileges)
     """
