@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydqt"
-version = "1.0.3"
+version = "1.0.4"
 description = "A package to help parameterise and macrofy sql queries"
 authors = ["Mark Ingham <mark.ingham@ly.st>"]
 readme = "README.md"
