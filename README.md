@@ -48,7 +48,7 @@ WORKSPACE_NAME = ''
 When done, save and close the file then reload to ensure your changes are loaded into the appropriate environment variables:
 
 ```
-from pydqt import env_reload()
+from pydqt import env_reload
 
 env_reload()
 ```
@@ -127,7 +127,7 @@ This is how your workspace should look (though you will probably have many more 
 # import the Query class
 from pydqt import Query, test_data_file_full_path
 
-query = Query(query="select * from '{{table}}' limit 10;",table=test_data_file_full_path())
+query = Query(query="select * from {{table}} limit 10;",table=test_data_file_full_path())
 query
 ```
 
