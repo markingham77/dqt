@@ -268,7 +268,7 @@ def cache_dir(template: str='', **kwargs):
         for i, (key, val) in enumerate(kwargs.items()):
             if type(val)==list:
                 fn = fn + '__' + key + '__' + "|".join(val)
-            elif type(val)==int | type(val)==float:    
+            elif (type(val)==int) | (type(val)==float): 
                 fn = fn + '__' + key + '__' + str(val)
             else:
                 fn = fn + '__' + key + '__' + val
