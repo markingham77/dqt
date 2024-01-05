@@ -222,16 +222,16 @@ WORKSPACE_NAME = ''""")
                     found_role = True
         if not found_db:
             with open(filename, 'a') as f:
-                f.write("SNOWFLAKE_DEFAULT_DATABASE = ''")
+                f.write("\nSNOWFLAKE_DEFAULT_DATABASE = ''")
         if not found_schema:
             with open(filename, 'a') as f:
-                f.write("SNOWFLAKE_DEFAULT_SCHEMA = ''")
+                f.write("\nSNOWFLAKE_DEFAULT_SCHEMA = ''")
         if not found_login:
             with open(filename, 'a') as f:
-                f.write("SNOWFLAKE_LOGIN = ''")
+                f.write("\nSNOWFLAKE_LOGIN = ''")
         if not found_role:
             with open(filename, 'a') as f:
-                f.write("SNOWFLAKE_ROLE = ''")
+                f.write("\nSNOWFLAKE_ROLE = ''")
                 
 
 
