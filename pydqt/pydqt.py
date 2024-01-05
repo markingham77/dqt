@@ -202,9 +202,37 @@ def setup_env():
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
 WORKSPACE_ROOT = ''
-DEFAULT_DATABASE = ''
-DEFAULT_SCHEMA = ''
+SNOWFLAKE_DEFAULT_DATABASE = ''
+SNOWFLAKE_DEFAULT_SCHEMA = ''
 WORKSPACE_NAME = ''""")
+    else:
+        found_login = False
+        found_role = False
+        found_db = False
+        found_schema = False
+        with open(filename,'r') as f:        
+            for line in f:
+                if line.startswith("SNOWFLAKE_DEFAULT_DATABASE"):
+                    found_db = True
+                elif line.startswith("SNOWFLAKE_DEFAULT_SCHEMA"):
+                    found_schema = True
+                elif line.startswith("SNOWFLAKE_LOGIN"):
+                    found_login = True
+                elif line.startswith("SNOWFLAKE_ROLE"):
+                    found_role = True
+        if not found_db:
+            with open(filename, 'a') as f:
+                f.write("SNOWFLAKE_DEFAULT_DATABASE = ''")
+        if not found_schema:
+            with open(filename, 'a') as f:
+                f.write("SNOWFLAKE_DEFAULT_SCHEMA = ''")
+        if not found_login:
+            with open(filename, 'a') as f:
+                f.write("SNOWFLAKE_LOGIN = ''")
+        if not found_role:
+            with open(filename, 'a') as f:
+                f.write("SNOWFLAKE_ROLE = ''")
+                
 
 
 # Initial setup when pydqt is imported
