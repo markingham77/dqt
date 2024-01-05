@@ -44,6 +44,14 @@ def test_sql_command():
     query.load()
     assert len(query.df)>0  
 
+def test_write_sql():
+    """
+    tests dqt's writing to sql
+    """    
+    query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
+    query.load()
+    query.write_sql("dqt_delme_test",schema="CORE_WIP")
+
 def test_macro():
     """
     test a sql command

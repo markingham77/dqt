@@ -41,6 +41,8 @@ A text editor will then open, allowing you to fill in the blanks:
 ```bash
 SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
+SNOWFLAKE_DEFAULT_DATABASE = ''
+SNOWFLAKE_DEFAULT_SCHEMA = ''
 WORKSPACE_ROOT = ''
 WORKSPACE_NAME = ''
 ```

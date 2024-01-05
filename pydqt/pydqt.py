@@ -15,6 +15,7 @@ import duckdb
 from duckdb import CatalogException
 from pathlib import Path
 import shutil
+from snowflake.connector.pandas_tools import write_pandas
 
 def env_file_full_path():
     return os.path.join(Path(__file__).parents[0],'.env')
@@ -201,6 +202,8 @@ def setup_env():
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
 WORKSPACE_ROOT = ''
+DEFAULT_DATABASE = ''
+DEFAULT_SCHEMA = ''
 WORKSPACE_NAME = ''""")
 
 
@@ -213,32 +216,63 @@ USER_DIR = env_reload()
 if not test_data_exists():
     create_test_data()
 
-def py_connect_db() -> snowflake.connector.connection.SnowflakeConnection:
+def py_connect_db(warehouse = None, database=None, schema=None) -> snowflake.connector.connection.SnowflakeConnection:
     """connect to snowflake, ensure SNOWFLAKE_LOGIN defined in .env"""
+
 
     load_dotenv(
         env_file_full_path()
         # Path('.env'),
     )  # find .env automagically by walking up directories until it's found
 
-    if "SNOWFLAKE_LOGIN" not in os.environ:
-        raise EnvironmentError(
-            "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
-        )
-    if os.environ["SNOWFLAKE_LOGIN"]=='':
-        raise EnvironmentError(
-            "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
-        )
+    def check_env_var(var):
+        if var not in os.environ:
+            if var == "SNOWFLAKE_LOGIN":
+                raise EnvironmentError(
+                    f"Failed. Please set {var}=<lyst email> & SNOWFLAKE_ROLE in your .env file"
+                )
+            else:
+                raise EnvironmentError(
+                    f"Failed. Please set {var} in your .env file - via env_edit()"
+                )
+        else:    
+            if os.environ[var]=='':
+                if var == "SNOWFLAKE_LOGIN":
+                    raise EnvironmentError(
+                        f"Failed. Please set {var}=<lyst email> & SNOWFLAKE_ROLE in your .env file"
+                    )
+                else:
+                    raise EnvironmentError(
+                        f"Failed. Please set {var} in your .env file - via env_edit()"
+                    )
+
+    for var in ["SNOWFLAKE_LOGIN", "SNOWFLAKE_ROLE", "SNOWFLAKE_DEFAULT_DATABASE", "SNOWFLAKE_DEFAULT_SCHEMA"]:
+        check_env_var(var)
+    # if "SNOWFLAKE_LOGIN" not in os.environ:
+    #     raise EnvironmentError(
+    #         "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
+    #     )
+    # if os.environ["SNOWFLAKE_LOGIN"]=='':
+    #     raise EnvironmentError(
+    #         "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
+    #     )
+    
     SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
+    if not warehouse:
+        warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
+    if not database:
+        database = os.getenv("SNOWFLAKE_DEFAULT_DATABASE")
+    if not schema:
+        schema = os.getenv("SNOWFLAKE_DEFAULT_SCHEMA")
 
     return snowflake.connector.connect(
         account="fs67922.eu-west-1",
         user=os.getenv("SNOWFLAKE_LOGIN"),
         authenticator="externalbrowser",
-        database="LYST",
-        schema="LYST_ANALYTCS",
+        database=database,
+        schema=schema,
         role=SNOWFLAKE_ROLE,
-        warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH",
+        warehouse=warehouse,
         client_session_keep_alive=True,
     );
 
@@ -479,11 +513,14 @@ params: {self.params}"""
             self.df=df
         return self.df
 
-    def run(self):
+    def run(self, schema=""):
         if '.csv' in self.sql.text:
             df = duckdb.sql(self.sql.text).df()
         else:
-            conn = py_connect_db()
+            if schema!="":
+                conn = py_connect_db(schema=schema)
+            else:
+                conn = py_connect_db()
             df = pd.read_sql(self.sql.text, conn)
         # convert any date columns to datetime (altair only works with datetime NOT date)
 
@@ -505,6 +542,51 @@ params: {self.params}"""
             self.csv=self.get_cache_files()[0]
         self.df=df
         return self.df
+    
+    def write_sql(self, table, warehouse=None, database=None, schema=None, overwrite=False):
+        """
+        writes result to sql table.  Note: only works for Snowflake at the moment.  If the table does not exist
+        then one is automatically created, which may result in fields being of an unexpected type (eg dates are 
+        often converted to integers by Snowflake).  To avoid unexpected results, it is advised to create your table 
+        in advance.
+
+        This works by opening a new db connection where you can specify the optional params:
+
+        warehouse - warehouse
+        database - database
+        schema - schema
+        table - table name        
+        if_exists - what to do if the table already exists.  Options are:
+
+                        - fail: Raise a ValueError
+                        - replace: Drop the table before inserting new values
+                        - append: Insert new values to the existing table.
+        """
+        assert len(self.df)>0,"Query object has no dataframe - try Query.run() or Query.load() to produce one"
+        if overwrite==True:
+            auto_create_table=False
+        assert table, "you must specify a table name - doesn't matter if it exists already or not"
+
+        SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
+        if not warehouse:
+            warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
+        if not database:
+            database = "LYST"
+        if not schema:
+            if "WRITE_SCHEMA" not in os.environ:
+                schema = f"{database}_ANALYTICS"
+            else:
+                if os.environ["WRITE_SCHEMA"]=='':
+                    schema = f"{database}_ANALYTICS"
+                else:
+                    schema = os.environ["WRITE_SCHEMA"]
+        schema=schema.upper() 
+        warehouse=warehouse.upper() 
+        database=database.upper()                    
+        conn = py_connect_db(warehouse=warehouse, database=database, schema=schema)
+
+        success, nchunks, nrows, output  = write_pandas(conn=conn,df=self.df,table_name=table,database=database,schema=schema,overwrite=overwrite,quote_identifiers=False,auto_create_table=True)
+
 
 def get_global_template_dir():
     return os.path.join(str(Path(__file__).parents[0]),'sql/templates/')
