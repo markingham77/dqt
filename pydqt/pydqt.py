@@ -201,9 +201,9 @@ def setup_env():
         with open(filename,'w') as f:
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
-WORKSPACE_ROOT = ''
 SNOWFLAKE_DEFAULT_DATABASE = ''
 SNOWFLAKE_DEFAULT_SCHEMA = ''
+WORKSPACE_ROOT = ''
 WORKSPACE_NAME = ''""")
     else:
         found_login = False
