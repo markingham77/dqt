@@ -71,7 +71,7 @@ You should, hopefully see lots of green (ie tests passing).  If you do not have 
 ## PYDQT Main Class; Query
 PYDQT has one main class - Query.
 
-Query requires at least one input - a query, can be sql filename or a direct select query.  Upon instantiation, Query creates an object with various fields and methods relating to this query.  Note that Query does not automatically run a query but it does automatically compile the query. 
+Query requires at least one input - a query, can be sql filename or a direct select query.  Upon instantiation, Query creates an object with various fields and methods relating to this query.  Note that Query does not automatically run a query but it does automatically compile the query.  To run the query you use the .run() method (see examples below).  In addition to querying data, Query can also write data to SQL.  Using the write_sql() method, users can write the .df property to a table of their choosing (and one is created if it doesn't already exist).  See example below. 
 
 All the examples assume you are using PYDQT from within an interactive python session, such as jupyter or hex.  There is a notebooks folder within the project where you can also find examples.  You can create your own notebooks here and they will be ignored by git (so long as they don't end in "_example.ipynb")
 
@@ -238,6 +238,23 @@ from {{table}}
 </pre>
 
 See the [test.sql](workspaces/main/templates/test.sql) template for an example of using macros within a template.
+
+### Example 4: writing results to a SQL table
+Get some data:
+
+<pre>
+query = Query(query="select * from {{table}} limit 10;",table=test_data_file_full_path())
+query.run()
+</pre>
+
+Now we call the write_sql() method:
+
+<pre>
+query.write_sql("my_table", schema="SCHEMA_NAME", append=False, timestamp=False)
+</pre>
+
+See write_sql help for more details
+
 
 ## Quality of cached data
 

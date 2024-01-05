@@ -44,13 +44,30 @@ def test_sql_command():
     query.load()
     assert len(query.df)>0  
 
-def test_write_sql():
+def test_write_sql_create_replace_date():
     """
     tests dqt's writing to sql
     """    
     query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
     query.load()
-    query.write_sql("dqt_delme_test",schema="CORE_WIP")
+    query.write_sql("dqt_delme_test",schema="CORE_WIP", append=False, timestamp=False)
+
+def test_write_sql_create_replace():
+    """
+    tests dqt's writing to sql
+    """    
+    query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
+    query.load()
+    query.write_sql("dqt_delme_test",schema="CORE_WIP", append=False)
+
+def test_write_sql_append():
+    """
+    tests dqt's writing to sql
+    """    
+    query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
+    query.load()
+    query.write_sql("dqt_delme_test",schema="CORE_WIP", append=True)
+
 
 def test_macro():
     """

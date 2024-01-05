@@ -571,7 +571,7 @@ params: {self.params}"""
         self.df=df
         return self.df
     
-    def write_sql(self, table, warehouse=None, database=None, schema=None, overwrite=False):
+    def write_sql(self, table, warehouse=None, database=None, schema=None, append=False, timestamp=True):
         """
         writes result to sql table.  Note: only works for Snowflake at the moment.  If the table does not exist
         then one is automatically created, which may result in fields being of an unexpected type (eg dates are 
@@ -580,18 +580,15 @@ params: {self.params}"""
 
         This works by opening a new db connection where you can specify the optional params:
 
+        table - table name    
         warehouse - warehouse
         database - database
         schema - schema
-        table - table name        
-        if_exists - what to do if the table already exists.  Options are:
-
-                        - fail: Raise a ValueError
-                        - replace: Drop the table before inserting new values
-                        - append: Insert new values to the existing table.
+        append - append to an existing table                
+        timestamp - if True then any date / datetime columns are written to SQL as timestamps, if False then written as dates
         """
         assert len(self.df)>0,"Query object has no dataframe - try Query.run() or Query.load() to produce one"
-        if overwrite==True:
+        if append==False:
             auto_create_table=False
         assert table, "you must specify a table name - doesn't matter if it exists already or not"
 
@@ -612,8 +609,49 @@ params: {self.params}"""
         warehouse=warehouse.upper() 
         database=database.upper()                    
         conn = py_connect_db(warehouse=warehouse, database=database, schema=schema)
+        
+        df=self.df
+        for idx,dtype in enumerate(df.dtypes):
+            if 'date' in str(dtype).lower():
+                col = df.columns[idx]
+                if timestamp==True:
+                    df[col] = df[col].dt.strftime('%Y-%m-%d:%H-%M-%S')
+                else:
+                    df[col] = df[col].dt.strftime('%Y-%m-%d')
 
-        success, nchunks, nrows, output  = write_pandas(conn=conn,df=self.df,table_name=table,database=database,schema=schema,overwrite=overwrite,quote_identifiers=False,auto_create_table=True)
+        def get_table_metadata(df):
+            def map_dtypes(x):
+                if (x == 'object') or (x=='category'):
+                    return 'VARCHAR'
+                elif 'date' in x:
+                    return 'DATE'
+                elif 'int' in x:
+                    return 'NUMERIC'  
+                elif 'float' in x: return 'FLOAT' 
+                else:
+                    print("cannot parse pandas dtype")
+            sf_dtypes = [map_dtypes(str(s)) for s in df.dtypes]
+            table_metadata = ", ". join([" ".join([y.upper(), x]) for x, y in zip(sf_dtypes, list(df.columns))])
+            return table_metadata
+
+
+        def df_to_snowflake_table(table_name, operation, df, conn=conn): 
+            if operation=='create_replace':
+                df.columns = [c.upper() for c in df.columns]
+                table_metadata = get_table_metadata(df)
+                conn.cursor().execute(f"CREATE OR REPLACE TABLE {table_name} ({table_metadata})")
+                write_pandas(conn, df, table_name.upper())
+            elif operation=='insert':
+                table_rows = str(list(df.itertuples(index=False, name=None))).replace('[','').replace(']','')
+                conn.cursor().execute(f"INSERT INTO {table_name} VALUES {table_rows}")
+
+        operation = 'create_replace'
+        if append==True:
+            operation = 'insert'
+
+        df_to_snowflake_table(table, operation, df, conn=conn)
+
+        # success, nchunks, nrows, output  = write_pandas(conn=conn,df=self.df,table_name=table,database=database,schema=schema,overwrite=True,quote_identifiers=False,auto_create_table=True)
 
 
 def get_global_template_dir():
