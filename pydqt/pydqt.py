@@ -9,6 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 import os
 from dotenv import load_dotenv, find_dotenv
 import pandas as pd
+import numpy as np
 from pprint import pprint
 import uuid
 import duckdb

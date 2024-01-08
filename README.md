@@ -283,7 +283,7 @@ the test data looks like this:
 Now let's add a contrived example that gives you a flavour for how to combine columns in tests:
 
 <pre>
-query.df['gmv_per_order'] = query.df['gmv']/query.df['orders']
+query.df['gmv_per_order'] = query.df['gmv']/query.df['orders'].replace(np.nan, 0)
 </pre>
 
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
@@ -298,7 +298,7 @@ for dataframe column names.
     "tests":[
         {
             "name": "gmv_per_order_check",
-            "assert": "'gmv_per_order'=='gmv'/'orders'"
+            "assert": "'gmv_per_order'=='gmv'/'orders'.replace(0,np.nan)"
         },
         {
             "name": "orders_are_non_negative",
