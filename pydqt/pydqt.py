@@ -193,7 +193,7 @@ def setup_local_dirs():
     json_dir = os.path.join(user_dir,'json')
     if not os.path.exists(json_dir):
         os.mkdir(json_dir)
-    for subdir in ['tables','checks']:
+    for subdir in ['tables','data_tests']:
         if not os.path.exists(os.path.join(json_dir,subdir)):
             os.mkdir(os.path.join(json_dir,subdir))
 
@@ -451,6 +451,7 @@ class Query:
         self.template=None
         self.cache = cache
         self.df = None
+        self.tests = {}
         self.core_attributes = ['template','sql','cache','df','core_attributes','query','csv']
         self.params=QueryParams(disallowed=self.core_attributes,**kwargs)
         is_template,compiled_sql=compile(self.query, **self.params.__dict__)
@@ -576,6 +577,45 @@ params: {self.params}"""
         self.df=df
         return self.df
     
+    def test(self, json=''):
+        """
+        applies tests defined in json/data_tests and returns test results which include a summary of failed records
+        and copies of those records.  Output is saved in self.tests
+        """
+        assert len(self.df)>0,"Query object has no dataframe to test - try Query.run() or Query.load() to produce one"
+        assert json!='', "you need to specify a json file (which lives in workspace/json/data_tests)"
+        if len(json)>0:
+            df=self.df
+            workspace_dir, workspace_name = get_ws()
+            full_json_file = os.path.join(workspace_dir, workspace_name, json, 'data_tests')
+            with open(full_json_file,'r') as fobj:
+                x=json.load(fobj)
+                tests=x['tests']  
+                def replace_with_df(match):
+                    return f"df[\'{match.group(1)}\']"  
+                test_report = {}
+                for test in tests:
+                    print(f'Checking {test["name"]}')
+                    pattern = r"'(.*?)'"
+                    modified_text = re.sub(pattern, replace_with_df, test['assert'])
+                    tfs = eval(modified_text)
+                    fails = sum(tfs==False)
+                    print('Number of records which failed: ',fails)
+                    print('Percentage of records that failed: ',str(100*fails/len(df))+'%')
+                    if fails>0:
+                        print('Failed records:')
+                        print(df[tfs==False])
+                        test_report[test["name"]] = {
+                            "fails": fails,
+                            "percentage_fails": 100*fails/len(df),
+                            "failed_records": df[tfs==False]
+                        }
+                    else:
+                        test_report[test["name"]] = "All Passed!"    
+                self.tests[json.replace('json','')] = test_report        
+
+
+
     def write_sql(self, table, warehouse=None, database=None, schema=None, append=False, timestamp=True):
         """
         writes result to sql table.  Note: only works for Snowflake at the moment.  If the table does not exist
