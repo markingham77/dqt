@@ -577,44 +577,44 @@ params: {self.params}"""
         self.df=df
         return self.df
     
-    def test(self, json=''):
+    def test(self, json_file=''):
         """
         applies tests defined in json/data_tests and returns test results which include a summary of failed records
         and copies of those records.  Output is saved in self.tests
         """
         assert len(self.df)>0,"Query object has no dataframe to test - try Query.run() or Query.load() to produce one"
-        assert json!='', "you need to specify a json file (which lives in workspace/json/data_tests)"
-        if len(json)>0:
-            df=self.df
-            workspace_dir, workspace_name = get_ws()
-            if ".json" not in json.lower():
-                json = json + ".json"
-            full_json_file = os.path.join(workspace_dir, workspace_name, 'json/data_tests',json)
-            with open(full_json_file,'r') as fobj:
-                x=json.load(fobj)
-                tests=x['tests']  
-                def replace_with_df(match):
-                    return f"df[\'{match.group(1)}\']"  
-                test_report = {}
-                for test in tests:
-                    print(f'Checking {test["name"]}')
-                    pattern = r"'(.*?)'"
-                    modified_text = re.sub(pattern, replace_with_df, test['assert'])
-                    tfs = eval(modified_text)
-                    fails = sum(tfs==False)
-                    print('Number of records which failed: ',fails)
-                    print('Percentage of records that failed: ',str(100*fails/len(df))+'%')
-                    if fails>0:
-                        print('Failed records:')
-                        print(df[tfs==False])
-                        test_report[test["name"]] = {
-                            "fails": fails,
-                            "percentage_fails": 100*fails/len(df),
-                            "failed_records": df[tfs==False]
-                        }
-                    else:
-                        test_report[test["name"]] = "All Passed!"    
-                self.tests[json.replace('json','')] = test_report        
+        assert json_file!='', "you need to specify a json file (which lives in workspace/json/data_tests)"
+        df=self.df
+        workspace_dir, workspace_name = get_ws()
+        if ".json" not in json_file.lower():
+            json_file = json_file + ".json"
+        full_json_file = os.path.join(workspace_dir, workspace_name, 'json/data_tests',json_file)
+        print(full_json_file)
+        with open(full_json_file,'r') as fobj:
+            x=json.load(fobj)
+            tests=x['tests']  
+            def replace_with_df(match):
+                return f"df[\'{match.group(1)}\']"  
+            test_report = {}
+            for test in tests:
+                print(f'Checking {test["name"]}')
+                pattern = r"'(.*?)'"
+                modified_text = re.sub(pattern, replace_with_df, test['assert'])
+                tfs = eval(modified_text)
+                fails = sum(tfs==False)
+                print('Number of records which failed: ',fails)
+                print('Percentage of records that failed: ',str(100*fails/len(df))+'%')
+                if fails>0:
+                    print('Failed records:')
+                    print(df[tfs==False])
+                    test_report[test["name"]] = {
+                        "fails": fails,
+                        "percentage_fails": 100*fails/len(df),
+                        "failed_records": df[tfs==False]
+                    }
+                else:
+                    test_report[test["name"]] = "All Passed!"    
+            self.tests[json_file.replace('.json','')] = test_report        
 
 
 
