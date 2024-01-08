@@ -269,7 +269,7 @@ DQT can test data for simple tests such as non null as well as testing combinati
 Get some data:
 
 <pre>
-query = Query(query="select * from '{{table}}' limit 10;",table=test_data_file_full_path())
+query = Query(query="select * from '{{table}}';",table=test_data_file_full_path())
 query.run()
 </pre>
 
@@ -288,7 +288,7 @@ the test data looks like this:
 Now let's add a contrived example that gives you a flavour for how to combine columns in tests:
 
 <pre>
-query.df['gmv_per_order'] = query.df['gmv']/query.df['orders'].replace(0, np.nan)
+query.df['gmv_per_order'] = query.df['gmv']/query.df['orders']
 </pre>
 
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
@@ -319,7 +319,7 @@ for dataframe column names.
     "tests":[
         {
             "name": "gmv_per_order_check",
-            "assert": "'gmv_per_order'=='gmv'/'orders'.replace(0,np.nan)"
+            "assert": "'gmv_per_order'=='gmv'/'orders'"
         },
         {
             "name": "orders_are_non_negative",
@@ -338,7 +338,28 @@ save this as in the above sub-folder as 'example.json' and run:
 query.test('example.json')
 </pre>
 
-The above tests will run and the resulting test report can be found in query.tests
+The above tests will run and the resulting test report can be found in query.tests:
+
+<pre>
+{'example': {'gmv_per_order_check': 'All Passed!',
+  'orders_are_non_negative': 'All Passed!',
+  'all_orders_come_from_css': {'fails': 378,
+   'percentage_fails': 75.0,
+   'failed_records':          dates  orders      gmv region  source  gmv_per_order
+   21  2022-01-31      98  7306.74     US  direct      74.558571
+   22  2022-02-28      82  8150.29     US  direct      99.393780
+   23  2022-03-31      37  3478.29     US  direct      94.007838
+   24  2022-04-30      50  4803.71     US  direct      96.074200
+   25  2022-05-31      23  1773.99     US  direct      77.130000
+   ..         ...     ...      ...    ...     ...            ...
+   499 2023-05-31      91  2774.43     FR     app      30.488242
+   500 2023-06-30      82  8066.01     FR     app      98.365976
+   501 2023-07-31      80  6615.54     FR     app      82.694250
+   502 2023-08-31      82  1030.11     FR     app      12.562317
+   503 2023-09-30      57  3772.19     FR     app      66.178772
+   
+   [378 rows x 6 columns]}}}
+</pre>
 
 
 

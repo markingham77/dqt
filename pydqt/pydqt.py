@@ -600,9 +600,18 @@ params: {self.params}"""
             for test in tests:
                 print(f'Checking {test["name"]}')
                 pattern = r"'(.*?)'"
-                modified_text = re.sub(pattern, replace_with_df, test['assert'])
-                modified_text = modified_text.replace("`","'")
-                tfs = eval(modified_text)
+                modified_text = re.sub(pattern, replace_with_df, test['assert'])                
+                # print(modified_text)
+                if ("==" in modified_text) and ("`" not in modified_text):                    
+                    # need to deal with pandas NaN!=NaN - ridiculous!
+                    splits = modified_text.split("==")
+                    assert len(splits)==2, "you cannot have more than one '==' in your assertion.  Check your json test file."
+                    lhs = eval(splits[0].strip())
+                    rhs = eval(splits[1].strip())
+                    tfs = lhs.fillna(-99999) == rhs.fillna(-99999)
+                else:    
+                    modified_text = modified_text.replace("`","'")
+                    tfs = eval(modified_text)
                 fails = sum(tfs==False)
                 print('Number of records which failed: ',fails)
                 print('Percentage of records that failed: ',str(100*fails/len(df))+'%')
