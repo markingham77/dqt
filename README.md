@@ -309,7 +309,7 @@ the json/data_tests sub-folder of your current workspace:
             └── mymacros.jinja
 </pre>
 
-For our example, we are going to use the json below, which should results in two passes and one fail (the last one).  Also, note in the last test how `css`
+For our example, we are going to use the json below, which should result in two passes and one fail (the last one).  Also, note in the last test how `css`
 is quoted using the backtick quote.  All strings should be quoted this way, as the single-quote is reserved
 for dataframe column names.
 
@@ -341,6 +341,8 @@ query.test('example.json')
 The above tests will run and the resulting test report can be found in query.tests:
 
 <pre>
+query.tests
+
 {'example': {'gmv_per_order_check': 'All Passed!',
   'orders_are_non_negative': 'All Passed!',
   'all_orders_come_from_css': {'fails': 378,
@@ -360,6 +362,8 @@ The above tests will run and the resulting test report can be found in query.tes
    
    [378 rows x 6 columns]}}}
 </pre>
+
+As we can see the last test had many records which failed as they're not from css.
 
 
 
