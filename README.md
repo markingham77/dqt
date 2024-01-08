@@ -294,19 +294,20 @@ query.df['gmv_per_order'] = query.df['gmv']/query.df['orders'].replace(0, np.nan
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
 the json/data_tests sub-folder of your current workspace:
 
+<pre>
 .
 └── main
     ├── cache
     │   └── snowflake
-    ├── **json**
-    │   ├── **data_tests**
+    ├── json
+    │   ├── data_tests <-- JSON TEST FILES GO IN HERE
     │   └── tables
     └── templates
         ├── compiled
         ├── includes
         └── macros
             └── mymacros.jinja
-
+</pre>
 
 For our example, we are going to use the json below, which should results in two passes and one fail (the last one).  Also, note in the last test how `css`
 is quoted using the backtick quote.  All strings should be quoted this way, as the single-quote is reserved
