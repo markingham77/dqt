@@ -243,7 +243,7 @@ See the [test.sql](workspaces/main/templates/test.sql) template for an example o
 Get some data:
 
 <pre>
-query = Query(query="select * from {{table}} limit 10;",table=test_data_file_full_path())
+query = Query(query="select * from '{{table}}' limit 10;",table=test_data_file_full_path())
 query.run()
 </pre>
 
@@ -254,6 +254,59 @@ query.write_sql("my_table", schema="SCHEMA_NAME", append=False, timestamp=False)
 </pre>
 
 See write_sql help for more details
+
+### Example 5: testing data
+DQT can test data for simple tests such as non null as well as testing combinations of columns
+
+Get some data:
+
+<pre>
+query = Query(query="select * from '{{table}}' limit 10;",table=test_data_file_full_path())
+query.run()
+</pre>
+
+the test data looks like this:
+
+
+  dates	  orders	gmv	  region	source
+0	2022-01-31	94	584.37	US	css
+1	2022-02-28	63	5212.05	US	css
+2	2022-03-31	70	2304.68	US	css
+3	2022-04-30	60	2604.20	US	css
+4	2022-05-31	13	737.94	US	css
+...	...	...	...	...	...
+
+Now let's add a contrived example that gives you a flavour for how to combine columns in tests:
+
+<pre>
+df = query.df
+df['gmv_per_order'] = df['gmv']/df['orders']
+</pre>
+
+We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
+the json/data_tests sub-folder of your current workspace.  For our example, we are going to use:
+
+{
+    "tests":[
+        {
+            "name": "gmv_per_order_check",
+            "assert": "'gmv_per_order'=='gmv'/'orders'"
+        },
+        {
+            "name": "orders_are_non_negative",
+            "assert": "'orders'>=0"
+        }
+    ]
+}
+
+save this as in the above sub-folder as 'example.json' and run:
+
+<pre>
+query.test('example.json')
+</pre>
+
+The above tests will run and the resulting test report can be found in query.tests
+
 
 
 ## Quality of cached data
