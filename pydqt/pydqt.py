@@ -190,7 +190,12 @@ def setup_local_dirs():
     if not os.path.exists(db_cache_dir):
         os.mkdir(db_cache_dir)
 
-
+    json_dir = os.path.join(user_dir,'json')
+    if not os.path.exists(json_dir):
+        os.mkdir(json_dir)
+    for subdir in ['tables','checks']:
+        if not os.path.exists(os.path.join(json_dir,subdir)):
+            os.mkdir(os.path.join(json_dir,subdir))
 
     return user_dir
 
@@ -584,7 +589,7 @@ params: {self.params}"""
         warehouse - warehouse
         database - database
         schema - schema
-        append - append to an existing table                
+        append - append to an existing table (default False)                
         timestamp - if True then any date / datetime columns are written to SQL as timestamps, if False then written as dates
         """
         assert len(self.df)>0,"Query object has no dataframe - try Query.run() or Query.load() to produce one"
