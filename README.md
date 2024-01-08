@@ -287,6 +287,7 @@ df['gmv_per_order'] = df['gmv']/df['orders']
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
 the json/data_tests sub-folder of your current workspace.  For our example, we are going to use:
 
+<pre>
 {
     "tests":[
         {
@@ -299,7 +300,7 @@ the json/data_tests sub-folder of your current workspace.  For our example, we a
         }
     ]
 }
-
+</pre>
 save this as in the above sub-folder as 'example.json' and run:
 
 <pre>
