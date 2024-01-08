@@ -587,7 +587,9 @@ params: {self.params}"""
         if len(json)>0:
             df=self.df
             workspace_dir, workspace_name = get_ws()
-            full_json_file = os.path.join(workspace_dir, workspace_name, json, 'data_tests')
+            if ".json" not in json.lower():
+                json = json + ".json"
+            full_json_file = os.path.join(workspace_dir, workspace_name, 'json/data_tests',json)
             with open(full_json_file,'r') as fobj:
                 x=json.load(fobj)
                 tests=x['tests']  
