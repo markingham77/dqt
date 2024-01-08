@@ -101,6 +101,9 @@ If the workspace does not already exist, PYDQT will create the necessary folders
 ── research
     ├── cache
     │   └── snowflake
+    ├── json
+    │   ├── data_tests
+    │   └── tables
     └── templates
         ├── compiled
         ├── includes
@@ -111,16 +114,18 @@ If the workspace does not already exist, PYDQT will create the necessary folders
 As you can see there are no templates in this workspace as it's just been created.  Your own custom templates go in the templates folder.  For example, here's the structure for the default "main" workspace that ships with PYDQT:
 
 ```
-├── main
-│   ├── cache
-│   │   └── snowflake
-│   └── templates
-│       ├── base.sql
-│       ├── compiled
-│       ├── includes
-│       ├── macros
-│       │   └── mymacros.jinja
-│       └── test.sql
+.
+└── main
+    ├── cache
+    │   └── snowflake
+    ├── json
+    │   ├── data_tests
+    │   └── tables
+    └── templates
+        ├── compiled
+        ├── includes
+        └── macros
+            └── mymacros.jinja
 ```
 
 This is how your workspace should look (though you will probably have many more template .sql files in there).
@@ -287,8 +292,23 @@ query.df['gmv_per_order'] = query.df['gmv']/query.df['orders'].replace(0, np.nan
 </pre>
 
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
-the json/data_tests sub-folder of your current workspace.  For our example, we are going to use the json 
-below, which should results in two passes and one fail (the last one).  Also, note in the last test how `css`
+the json/data_tests sub-folder of your current workspace:
+
+.
+└── main
+    ├── cache
+    │   └── snowflake
+    ├── **json**
+    │   ├── **data_tests**
+    │   └── tables
+    └── templates
+        ├── compiled
+        ├── includes
+        └── macros
+            └── mymacros.jinja
+
+
+For our example, we are going to use the json below, which should results in two passes and one fail (the last one).  Also, note in the last test how `css`
 is quoted using the backtick quote.  All strings should be quoted this way, as the single-quote is reserved
 for dataframe column names.
 
