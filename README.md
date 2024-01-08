@@ -283,7 +283,7 @@ the test data looks like this:
 Now let's add a contrived example that gives you a flavour for how to combine columns in tests:
 
 <pre>
-query.df['gmv_per_order'] = query.df['gmv']/query.df['orders'].replace(np.nan, 0)
+query.df['gmv_per_order'] = query.df['gmv']/query.df['orders'].replace(0, np.nan)
 </pre>
 
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
