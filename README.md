@@ -283,12 +283,15 @@ the test data looks like this:
 Now let's add a contrived example that gives you a flavour for how to combine columns in tests:
 
 <pre>
-df = query.df
-df['gmv_per_order'] = df['gmv']/df['orders']
+query.df['gmv_per_order'] = query.df['gmv']/query.df['orders']
 </pre>
 
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
-the json/data_tests sub-folder of your current workspace.  For our example, we are going to use:
+the json/data_tests sub-folder of your current workspace.  For our example, we are going to use the json 
+below, which should results in two passes and one fail (the last one).  Also, note in the last test how `css`
+is quoted using the backtick quote.  All strings should be quoted this way, as the single-quote is reserved
+for dataframe column names.
+
 
 <pre>
 {
@@ -300,6 +303,10 @@ the json/data_tests sub-folder of your current workspace.  For our example, we a
         {
             "name": "orders_are_non_negative",
             "assert": "'orders'>=0"
+        },
+        {
+          "name": "all_orders_come_from_css",
+          "assert": "'source'==`css`"
         }
     ]
 }

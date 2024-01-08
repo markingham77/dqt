@@ -600,6 +600,7 @@ params: {self.params}"""
                 print(f'Checking {test["name"]}')
                 pattern = r"'(.*?)'"
                 modified_text = re.sub(pattern, replace_with_df, test['assert'])
+                modified_text = modified_text.replace("`","'")
                 tfs = eval(modified_text)
                 fails = sum(tfs==False)
                 print('Number of records which failed: ',fails)
