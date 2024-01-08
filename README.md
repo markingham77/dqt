@@ -268,7 +268,7 @@ query.run()
 the test data looks like this:
 
 <pre>
-  dates	  orders	gmv	  region	source
+      dates	  orders	gmv	  region	source
 0	2022-01-31	94	584.37	US	css
 1	2022-02-28	63	5212.05	US	css
 2	2022-03-31	70	2304.68	US	css
