@@ -90,10 +90,13 @@ def set_snowflake_credentials(login='',role=''):
 def set_workspace(root='',name=''):    
     """
     sets the workspace environment .env file and environment variables using specified root and name params.
+    If root is not specified then this uses the current workspace's root.
     """
     
+    
     if root=='':
-        root = os.path.join(Path(__file__).parents[0],'workspaces')
+        root, _ = get_ws()
+        # root = os.path.join(Path(__file__).parents[0],'workspaces')
     if name=='':
         name = 'main'    
 
