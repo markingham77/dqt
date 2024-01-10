@@ -312,7 +312,7 @@ the json/data_tests sub-folder of your current workspace:
 
 For our example, we are going to use the json below, which should result in three passes (1,2 nd 5) and two fails (3 and 4).  Also, note in the last test how `css` is quoted using the backtick quote.  All strings should be quoted this way, as the single-quote is reserved for dataframe column names.  
 
-Behind the scenes, dqt fields are materialised as pandas Series objects and so a test can be comprised up of any Series methods which return either a Series or a scalar as well as the usual pandas scalar operators.  For example, the first three tests below will return a Series of booleans.  The last two will return a single boolean.  The last test is perhaps the most complex as it combines two Series aggregation methods with a boolean logical operator (and neatly shows how you may have to be careful with rounding when using pandas dataframe methods).
+Behind the scenes, dqt fields are materialised as pandas Series objects and so a test can be comprised of any Series methods which return either a Series or a scalar as well as the usual pandas scalar operators.  For example, the first three tests below will return a Series of booleans.  The last two will return a single boolean.  The last test is perhaps the most complex as it combines two Series aggregation methods with a boolean logical operator (and neatly shows how you may have to be careful with rounding when using pandas dataframe methods).
 
 <pre>
 {
@@ -373,7 +373,7 @@ query.tests
   'wgts_sum_to_one_within_epsilon': 'Passed'}}
 </pre>
 
-As we can see the last test had many records which failed as they're not from css.  You can also see that tests 
+As we can see the thrid test had many records which failed as they're not from css.  You can also see that tests 
 which return a boolean do not have record level detail attached in the test result.
 
 
