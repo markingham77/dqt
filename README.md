@@ -285,10 +285,11 @@ the test data looks like this:
 ...	...	...	...	...	...
 </pre>
 
-Now let's add a contrived example that gives you a flavour for how to combine columns in tests:
+Now let's add a coulpe of columns to gives you a flavour on how to combine columns in tests:
 
 <pre>
 query.df['gmv_per_order'] = query.df['gmv']/query.df['orders']
+query.df['wgts'] = query.df['gmv']/query.df['gmv'].sum()
 </pre>
 
 We can use query.test() to test data.  First we need a json file which contains our tests.  Tests go in 
@@ -309,10 +310,9 @@ the json/data_tests sub-folder of your current workspace:
             └── mymacros.jinja
 </pre>
 
-For our example, we are going to use the json below, which should result in two passes and one fail (the last one).  Also, note in the last test how `css`
-is quoted using the backtick quote.  All strings should be quoted this way, as the single-quote is reserved
-for dataframe column names.
+For our example, we are going to use the json below, which should result in three passes (1,2 nd 5) and two fails (3 and 4).  Also, note in the last test how `css` is quoted using the backtick quote.  All strings should be quoted this way, as the single-quote is reserved for dataframe column names.  
 
+Behind the scenes, dqt fields are materialised as pandas Series objects and so a test can be comprised up of any Series methods which return either a Series or a scalar as well as the usual pandas scalar operators.  For example, the first three tests below will return a Series of booleans.  The last two will return a single boolean.  The last test is perhaps the most complex as it combines two Series aggregation methods with a boolean logical operator (and neatly shows how you may have to be careful with rounding when using pandas dataframe methods).
 
 <pre>
 {
@@ -326,8 +326,16 @@ for dataframe column names.
             "assert": "'orders'>=0"
         },
         {
-          "name": "all_orders_come_from_css",
+          "name": "orders_come_from_css",
           "assert": "'source'==`css`"
+        },
+        {
+         "name": "wgts_sum_to_one",
+         "assert": "'wgts'.sum()==1"
+        },
+        {
+         "name": "wgts_sum_to_one_within_epsilon",
+         "assert": "('wgts'.sum()>0.9999) & ('wgts'.sum()<=1.0001)"
         }
     ]
 }
@@ -345,25 +353,28 @@ query.tests
 
 {'example': {'gmv_per_order_check': 'All Passed!',
   'orders_are_non_negative': 'All Passed!',
-  'all_orders_come_from_css': {'fails': 378,
+  'orders_come_from_css': {'fails': 378,
    'percentage_fails': 75.0,
-   'failed_records':          dates  orders      gmv region  source  gmv_per_order
-   21  2022-01-31      98  7306.74     US  direct      74.558571
-   22  2022-02-28      82  8150.29     US  direct      99.393780
-   23  2022-03-31      37  3478.29     US  direct      94.007838
-   24  2022-04-30      50  4803.71     US  direct      96.074200
-   25  2022-05-31      23  1773.99     US  direct      77.130000
-   ..         ...     ...      ...    ...     ...            ...
-   499 2023-05-31      91  2774.43     FR     app      30.488242
-   500 2023-06-30      82  8066.01     FR     app      98.365976
-   501 2023-07-31      80  6615.54     FR     app      82.694250
-   502 2023-08-31      82  1030.11     FR     app      12.562317
-   503 2023-09-30      57  3772.19     FR     app      66.178772
+   'failed_records':          dates  orders      gmv region  source  gmv_per_order      wgts
+   21  2022-01-31      98  7306.74     US  direct      74.558571  0.005900
+   22  2022-02-28      82  8150.29     US  direct      99.393780  0.006582
+   23  2022-03-31      37  3478.29     US  direct      94.007838  0.002809
+   24  2022-04-30      50  4803.71     US  direct      96.074200  0.003879
+   25  2022-05-31      23  1773.99     US  direct      77.130000  0.001433
+   ..         ...     ...      ...    ...     ...            ...       ...
+   499 2023-05-31      91  2774.43     FR     app      30.488242  0.002240
+   500 2023-06-30      82  8066.01     FR     app      98.365976  0.006514
+   501 2023-07-31      80  6615.54     FR     app      82.694250  0.005342
+   502 2023-08-31      82  1030.11     FR     app      12.562317  0.000832
+   503 2023-09-30      57  3772.19     FR     app      66.178772  0.003046
    
-   [378 rows x 6 columns]}}}
+   [378 rows x 7 columns]},
+  'wgts_sum_to_one': 'Failed',
+  'wgts_sum_to_one_within_epsilon': 'Passed'}}
 </pre>
 
-As we can see the last test had many records which failed as they're not from css.
+As we can see the last test had many records which failed as they're not from css.  You can also see that tests 
+which return a boolean do not have record level detail attached in the test result.
 
 
 

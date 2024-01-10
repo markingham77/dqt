@@ -611,23 +611,35 @@ params: {self.params}"""
                     assert len(splits)==2, "you cannot have more than one '==' in your assertion.  Check your json test file."
                     lhs = eval(splits[0].strip())
                     rhs = eval(splits[1].strip())
-                    tfs = lhs.fillna(-99999) == rhs.fillna(-99999)
+                    if type(lhs)==pd.core.series.Series:
+                        lhs=lhs.fillna(-99999)
+                    if type(rhs)==pd.core.series.Series:
+                        rhs=rhs.fillna(-99999)    
+                    tfs = lhs == rhs
                 else:    
                     modified_text = modified_text.replace("`","'")
                     tfs = eval(modified_text)
-                fails = sum(tfs==False)
-                print('Number of records which failed: ',fails)
-                print('Percentage of records that failed: ',str(100*fails/len(df))+'%')
-                if fails>0:
-                    print('Failed records:')
-                    print(df[tfs==False])
-                    test_report[test["name"]] = {
-                        "fails": fails,
-                        "percentage_fails": 100*fails/len(df),
-                        "failed_records": df[tfs==False]
-                    }
-                else:
-                    test_report[test["name"]] = "All Passed!"    
+                if type(tfs)==pd.core.series.Series:
+                    fails = sum(tfs==False)
+                    print('Number of records which failed: ',fails)
+                    print('Percentage of records that failed: ',str(100*fails/len(df))+'%')
+                    if fails>0:
+                        print('Failed records:')
+                        print(df[tfs==False])
+                        test_report[test["name"]] = {
+                            "fails": fails,
+                            "percentage_fails": 100*fails/len(df),
+                            "failed_records": df[tfs==False]
+                        }
+                    else:
+                        test_report[test["name"]] = "All Passed!"   
+                elif type(tfs)==np.bool_:
+                    if tfs:
+                        print('Test passed!')
+                        test_report[test["name"]] = "Passed"
+                    else:
+                        print('Test failed!')
+                        test_report[test["name"]] = "Failed"    
             self.tests[json_file.replace('.json','')] = test_report        
 
 
