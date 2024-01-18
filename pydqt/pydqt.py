@@ -767,7 +767,6 @@ def compile(template='total_aggs.sql',*args,**kwargs):
     ]))
     custom_filters = [f for _, f in filters.__dict__.items() if callable(f)]
     custom_filters = [f for f in custom_filters if f.__name__[:4]=='dqt_']
-    print(custom_filters)
     for f in custom_filters:
         # environment.filters['dqt_combinations'] = filters.dqt_combinations
        environment.filters[f.__name__] = f
