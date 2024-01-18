@@ -17,6 +17,7 @@ from duckdb import CatalogException
 from pathlib import Path
 import shutil
 from snowflake.connector.pandas_tools import write_pandas
+from .utils import custom_filters as filters
 
 def env_file_full_path():
     return os.path.join(Path(__file__).parents[0],'.env')
@@ -764,6 +765,13 @@ def compile(template='total_aggs.sql',*args,**kwargs):
         get_user_includes_dir()
         # get_global_includes_dir()
     ]))
+    custom_filters = [f for _, f in filters.__dict__.items() if callable(f)]
+    custom_filters = [f for f in custom_filters if f.__name__[:4]=='dqt_']
+    print(custom_filters)
+    for f in custom_filters:
+        # environment.filters['dqt_combinations'] = filters.dqt_combinations
+       environment.filters[f.__name__] = f
+
     if 'select' in template.lower():
         s=template
         if len(args)>0:
