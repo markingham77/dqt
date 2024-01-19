@@ -19,6 +19,7 @@ import shutil
 from snowflake.connector.pandas_tools import write_pandas
 from .utils import custom_filters as filters
 
+
 def env_file_full_path():
     return os.path.join(Path(__file__).parents[0],'.env')
 
@@ -87,6 +88,51 @@ def set_snowflake_credentials(login='',role=''):
     # now reload env and setup_local_dirs
     env_reload()
     return
+
+def set_schema(schema):
+    """
+    ammends the CURRENT_SCHEMA property of DB_SETTINGS object
+    """
+    assert schema, "you didn't specify a schema"
+    DB_SETTINGS['CURRENT_SCHEMA']=schema.upper()
+
+def get_schema():
+    """
+    retrieves the CURRENT_SCHEMA property of DB_SETTINGS object
+    """    
+    return DB_SETTINGS['CURRENT_SCHEMA']
+
+def set_database(db):
+    """
+    ammends the CURRENT_SCHEMA property of DB_SETTINGS object
+    """
+    assert db, "you didn't specify a schema"
+    DB_SETTINGS['CURRENT_DATABASE']=db.upper()
+
+def get_database():
+    """
+    retrieves the CURRENT_SCHEMA property of DB_SETTINGS object
+    """    
+    return DB_SETTINGS['CURRENT_DATABASE']
+
+def set_warehouse(wh):
+    """
+    ammends the CURRENT_SCHEMA property of DB_SETTINGS object
+    """
+    assert wh, "you didn't specify a schema"
+    DB_SETTINGS['CURRENT_WAREHOUSE']=wh.upper()
+
+def get_warehouse():
+    """
+    retrieves the CURRENT_SCHEMA property of DB_SETTINGS object
+    """    
+    return DB_SETTINGS['CURRENT_WAREHOUSE']
+
+def get_db_settings():
+    print('Current DB Settings are:')
+    print(DB_SETTINGS)
+    print('You can run: set_warehouse, set_database, set_schema to change any of these')
+    return DB_SETTINGS
 
 def set_workspace(root='',name=''):    
     """
@@ -163,6 +209,9 @@ def get_ws():
             name = 'main'
 
     return (ws_dir, name)                
+
+def get_workspace():
+    return get_ws()
 
 def setup_local_dirs():
     load_dotenv(
@@ -249,12 +298,20 @@ WORKSPACE_NAME = ''""")
 # user_dir = setup_local_dirs()
 setup_env()
 USER_DIR = env_reload()
+DB_SETTINGS={}
+DB_SETTINGS['CURRENT_SCHEMA'] = os.getenv("SNOWFLAKE_DEFAULT_SCHEMA")
+DB_SETTINGS['CURRENT_DATABASE'] = os.getenv("SNOWFLAKE_DEFAULT_DATABASE")
+role = os.getenv("SNOWFLAKE_ROLE")
+DB_SETTINGS['CURRENT_WAREHOUSE'] = f"{role}_QUERY_LARGE_WH"
+print(DB_SETTINGS)
+
+
 
 
 if not test_data_exists():
     create_test_data()
 
-def py_connect_db(warehouse = None, database=None, schema=None) -> snowflake.connector.connection.SnowflakeConnection:
+def py_connect_db(warehouse = get_warehouse(), database=get_database(), schema=get_schema()) -> snowflake.connector.connection.SnowflakeConnection:
     """connect to snowflake, ensure SNOWFLAKE_LOGIN defined in .env"""
 
 
@@ -294,14 +351,15 @@ def py_connect_db(warehouse = None, database=None, schema=None) -> snowflake.con
     #     raise EnvironmentError(
     #         "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
     #     )
-    
+
+    # Now have default values in function definition, above
     SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
-    if not warehouse:
-        warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
-    if not database:
-        database = os.getenv("SNOWFLAKE_DEFAULT_DATABASE")
-    if not schema:
-        schema = os.getenv("SNOWFLAKE_DEFAULT_SCHEMA")
+    # if not warehouse:
+    #     warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
+    # if not database:
+    #     database = os.getenv("SNOWFLAKE_DEFAULT_DATABASE")
+    # if not schema:
+    #     schema = os.getenv("SNOWFLAKE_DEFAULT_SCHEMA")
 
     return snowflake.connector.connect(
         account="fs67922.eu-west-1",
@@ -552,7 +610,12 @@ params: {self.params}"""
             self.df=df
         return self.df
 
-    def run(self, schema=""):
+    def run(self, schema=''):
+        # print(DB_SETTINGS)
+        if schema=='':
+            schema=get_schema()
+
+        # print('schema is', schema)
         if '.csv' in self.sql.text:
             df = duckdb.sql(self.sql.text).df()
         else:
@@ -645,7 +708,7 @@ params: {self.params}"""
 
 
 
-    def write_sql(self, table, warehouse=None, database=None, schema=None, append=False, timestamp=True):
+    def write_sql(self, table, warehouse=get_warehouse(), database=get_database(), schema=get_schema(), append=False, timestamp=True):
         """
         writes result to sql table.  Note: only works for Snowflake at the moment.  If the table does not exist
         then one is automatically created, which may result in fields being of an unexpected type (eg dates are 
@@ -666,19 +729,19 @@ params: {self.params}"""
             auto_create_table=False
         assert table, "you must specify a table name - doesn't matter if it exists already or not"
 
-        SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
-        if not warehouse:
-            warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
-        if not database:
-            database = "LYST"
-        if not schema:
-            if "WRITE_SCHEMA" not in os.environ:
-                schema = f"{database}_ANALYTICS"
-            else:
-                if os.environ["WRITE_SCHEMA"]=='':
-                    schema = f"{database}_ANALYTICS"
-                else:
-                    schema = os.environ["WRITE_SCHEMA"]
+        # SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
+        # if not warehouse:
+        #     warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
+        # if not database:
+        #     database = "LYST"
+        # if not schema:
+        #     if "WRITE_SCHEMA" not in os.environ:
+        #         schema = f"{database}_ANALYTICS"
+        #     else:
+        #         if os.environ["WRITE_SCHEMA"]=='':
+        #             schema = f"{database}_ANALYTICS"
+        #         else:
+        #             schema = os.environ["WRITE_SCHEMA"]
         schema=schema.upper() 
         warehouse=warehouse.upper() 
         database=database.upper()                    
