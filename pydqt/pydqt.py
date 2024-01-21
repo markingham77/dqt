@@ -181,7 +181,6 @@ def env_reload():
 def env_edit():
     # filename = os.path.join(Path(__file__).parents[0],'.env')
     filename = env_file_full_path()
-    print(filename)
     os.system(f'open {filename}') 
 
     load_dotenv(
@@ -305,9 +304,6 @@ DB_SETTINGS['CURRENT_SCHEMA'] = os.getenv("SNOWFLAKE_DEFAULT_SCHEMA")
 DB_SETTINGS['CURRENT_DATABASE'] = os.getenv("SNOWFLAKE_DEFAULT_DATABASE")
 role = os.getenv("SNOWFLAKE_ROLE")
 DB_SETTINGS['CURRENT_WAREHOUSE'] = f"{role}_QUERY_LARGE_WH"
-print(DB_SETTINGS)
-
-
 
 
 if not test_data_exists():
@@ -659,7 +655,6 @@ params: {self.params}"""
         if ".json" not in json_file.lower():
             json_file = json_file + ".json"
         full_json_file = os.path.join(workspace_dir, workspace_name, 'tests/json',json_file)
-        print(full_json_file)
         with open(full_json_file,'r') as fobj:
             x=json.load(fobj)
             tests=x['tests']  
@@ -802,12 +797,9 @@ class Test(Query):
     """
     def __init__(self, template=''):
         super().__init__(query=template)
-        print(template[-4:])
         assert template[-4:]=='.sql', "you need to input a '.sql' template file"
         assert self.template[:5]=='test_', "your test template needs to start with 'test_'"
         super().__init__(query=template)
-        print(self)
-        # assert self.is_template, "you can only use a template with the Test class"
 
     def run(self):
         self.test_result='FAILED'
@@ -834,7 +826,6 @@ def get_user_template_dir():
 
 def get_user_tests_template_dir():
     ws_root, ws_name = get_ws()
-    print(os.path.join(ws_root,ws_name,'tests','sql'))
     return os.path.join(ws_root,ws_name,'tests','sql')
 
 def get_user_macros_dir():
