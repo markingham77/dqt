@@ -20,6 +20,9 @@ from snowflake.connector.pandas_tools import write_pandas
 from .utils import custom_filters as filters
 
 
+class NoDataException(Exception):
+    pass
+
 def env_file_full_path():
     return os.path.join(Path(__file__).parents[0],'.env')
 
@@ -226,6 +229,12 @@ def setup_local_dirs():
     if not os.path.exists(user_dir):
         os.mkdir(user_dir)
 
+    template_dir = os.path.join(user_dir,'tests')
+    if not os.path.exists(template_dir):
+        os.mkdir(template_dir)
+    for subdir in ['sql','json',]:
+        if not os.path.exists(os.path.join(template_dir,subdir)):
+            os.mkdir(os.path.join(template_dir,subdir))      
 
     template_dir = os.path.join(user_dir,'templates')
     if not os.path.exists(template_dir):
@@ -243,13 +252,6 @@ def setup_local_dirs():
     db_cache_dir = os.path.join(cache_dir,'snowflake')
     if not os.path.exists(db_cache_dir):
         os.mkdir(db_cache_dir)
-
-    json_dir = os.path.join(user_dir,'json')
-    if not os.path.exists(json_dir):
-        os.mkdir(json_dir)
-    for subdir in ['tables','data_tests']:
-        if not os.path.exists(os.path.join(json_dir,subdir)):
-            os.mkdir(os.path.join(json_dir,subdir))
 
     return user_dir
 
@@ -627,7 +629,7 @@ params: {self.params}"""
         # convert any date columns to datetime (altair only works with datetime NOT date)
 
         if len(df)==0:
-            raise Exception('Query returned no data.  Please check your query and try again')
+            raise NoDataException('Query returned no data.  Please check your query and try again')
         for col in df.columns:
             try:
                 if type(df[col][0]) == datetime.date:
@@ -656,7 +658,7 @@ params: {self.params}"""
         workspace_dir, workspace_name = get_ws()
         if ".json" not in json_file.lower():
             json_file = json_file + ".json"
-        full_json_file = os.path.join(workspace_dir, workspace_name, 'json/data_tests',json_file)
+        full_json_file = os.path.join(workspace_dir, workspace_name, 'tests/json',json_file)
         print(full_json_file)
         with open(full_json_file,'r') as fobj:
             x=json.load(fobj)
@@ -790,7 +792,33 @@ params: {self.params}"""
 
         # success, nchunks, nrows, output  = write_pandas(conn=conn,df=self.df,table_name=table,database=database,schema=schema,overwrite=True,quote_identifiers=False,auto_create_table=True)
 
+class Test(Query):
+    """
+    DQT Test Class
 
+    Use this class to test data using SQL templates, ala DBT
+
+    Test templates live in workspace/tests/sql
+    """
+    def __init__(self, template=''):
+        super().__init__(query=template)
+        print(template[-4:])
+        assert template[-4:]=='.sql', "you need to input a '.sql' template file"
+        assert self.template[:5]=='test_', "your test template needs to start with 'test_'"
+        super().__init__(query=template)
+        print(self)
+        # assert self.is_template, "you can only use a template with the Test class"
+
+    def run(self):
+        self.test_result='FAILED'
+        try:
+            super().run()
+            self.test_details=self.df
+        except NoDataException:
+            self.test_result='PASSED'        
+        
+        return self.test_result
+    
 def get_global_template_dir():
     return os.path.join(str(Path(__file__).parents[0]),'sql/templates/')
 def get_global_macros_dir():
@@ -803,6 +831,11 @@ def get_user_template_dir():
     ws_root, ws_name = get_ws()
     return os.path.join(ws_root,ws_name,'templates')
     # return os.path.join(str(Path(__file__).parents[1]),'user/templates/')
+
+def get_user_tests_template_dir():
+    ws_root, ws_name = get_ws()
+    print(os.path.join(ws_root,ws_name,'tests','sql'))
+    return os.path.join(ws_root,ws_name,'tests','sql')
 
 def get_user_macros_dir():
     ws_root, ws_name = get_ws()
@@ -822,6 +855,7 @@ def compile(template='total_aggs.sql',*args,**kwargs):
 
     environment = Environment(loader=FileSystemLoader([
         get_user_template_dir(),
+        get_user_tests_template_dir(),
         get_global_template_dir(),
         get_user_macros_dir(),
         get_global_macros_dir(),

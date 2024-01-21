@@ -23,6 +23,7 @@ from pydqt.pydqt import (
     QueryTemplateParams,
     QueryParams,
     Query,
+    Test,
     Sql,
     Workspace,
 )
@@ -55,6 +56,7 @@ __all__ = [
     "QueryTemplateParams",
     "QueryParams",
     "Query",
+    "Test",
     "Sql",
     "Workspace",
     "pydqt"
