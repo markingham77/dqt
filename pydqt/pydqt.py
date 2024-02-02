@@ -757,6 +757,8 @@ params: {self.params}"""
             def map_dtypes(x):
                 if (x == 'object') or (x=='category'):
                     return 'VARCHAR'
+                elif 'bool' in x:
+                    return 'BOOLEAN'
                 elif 'date' in x:
                     return 'DATE'
                 elif 'int' in x:
