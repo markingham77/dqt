@@ -258,8 +258,20 @@ query.run()
 Now we call the write_sql() method:
 
 <pre>
-query.write_sql("my_table", schema="SCHEMA_NAME", append=False, timestamp=False)
+query.write_sql("my_table", schema="SCHEMA_NAME", append=False, write_timestamp=False)
 </pre>
+
+The write_sql method natively relies on pandas dtypes.  A major drawback can be when using dates as a pandas
+date or datetime column often has the dtype of "object".  As object is a catchall (eg, could be something other
+than a date) pydqt will write this as a VARCHAR.  If you know which columns are DATE or DATETIME columns, then
+you can specify these as kwargs in your call to the write_sql method.  EG, let's say your table has a "EVENT_DS"
+column, which you know is column of date objects and you want this to be preserved on your SQL table.  Then you
+would do:
+
+<pre>
+query.write_sql("my_table", schema="SCHEMA_NAME", append=False, write_timestamp=False, EVENT_DS="DATE")
+</pre>
+
 
 See write_sql help for more details
 

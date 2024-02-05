@@ -705,7 +705,7 @@ params: {self.params}"""
 
 
 
-    def write_sql(self, table, warehouse=get_warehouse(), database=get_database(), schema=get_schema(), append=False, timestamp=True):
+    def write_sql(self, table, warehouse=get_warehouse(), database=get_database(), schema=get_schema(), append=False, write_timestamp=True, **kwargs):
         """
         writes result to sql table.  Note: only works for Snowflake at the moment.  If the table does not exist
         then one is automatically created, which may result in fields being of an unexpected type (eg dates are 
@@ -719,7 +719,7 @@ params: {self.params}"""
         database - database
         schema - schema
         append - append to an existing table (default False)                
-        timestamp - if True then any date / datetime columns are written to SQL as timestamps, if False then written as dates
+        write_timestamp - if True then any date / datetime columns are written to SQL as timestamps, if False then written as dates
         """
         assert len(self.df)>0,"Query object has no dataframe - try Query.run() or Query.load() to produce one"
         if append==False:
@@ -748,12 +748,12 @@ params: {self.params}"""
         for idx,dtype in enumerate(df.dtypes):
             if 'date' in str(dtype).lower():
                 col = df.columns[idx]
-                if timestamp==True:
+                if write_timestamp==True:
                     df[col] = df[col].dt.strftime('%Y-%m-%d:%H-%M-%S')
                 else:
                     df[col] = df[col].dt.strftime('%Y-%m-%d')
 
-        def get_table_metadata(df):
+        def get_table_metadata(df,**kwargs):            
             def map_dtypes(x):
                 if (x == 'object') or (x=='category'):
                     return 'VARCHAR'
@@ -767,14 +767,21 @@ params: {self.params}"""
                 else:
                     print("cannot parse pandas dtype")
             sf_dtypes = [map_dtypes(str(s)) for s in df.dtypes]
+            cols=[c.upper() for c in df.columns]
+            if kwargs:
+                for key in kwargs:
+                    if key.upper() in cols:
+                        sf_dtypes[cols.index(key.upper())] = kwargs[key].upper()
+
             table_metadata = ", ". join([" ".join([y.upper(), x]) for x, y in zip(sf_dtypes, list(df.columns))])
+
             return table_metadata
 
 
-        def df_to_snowflake_table(table_name, operation, df, conn=conn): 
+        def df_to_snowflake_table(table_name, operation, df, conn=conn, **kwargs): 
             if operation=='create_replace':
                 df.columns = [c.upper() for c in df.columns]
-                table_metadata = get_table_metadata(df)
+                table_metadata = get_table_metadata(df,**kwargs)
                 conn.cursor().execute(f"CREATE OR REPLACE TABLE {table_name} ({table_metadata})")
                 write_pandas(conn, df, table_name.upper())
             elif operation=='insert':
@@ -785,7 +792,7 @@ params: {self.params}"""
         if append==True:
             operation = 'insert'
 
-        df_to_snowflake_table(table, operation, df, conn=conn)
+        df_to_snowflake_table(table, operation, df, conn=conn, **kwargs)
 
         # success, nchunks, nrows, output  = write_pandas(conn=conn,df=self.df,table_name=table,database=database,schema=schema,overwrite=True,quote_identifiers=False,auto_create_table=True)
 
