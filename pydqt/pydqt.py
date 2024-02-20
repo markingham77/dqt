@@ -608,8 +608,11 @@ params: {self.params}"""
             self.df=df
         return self.df
 
-    def run(self, schema=''):
+    def run(self, database='', schema=''):
         # print(DB_SETTINGS)
+        if database=='':
+            database=get_database()
+
         if schema=='':
             schema=get_schema()
 
@@ -618,9 +621,15 @@ params: {self.params}"""
             df = duckdb.sql(self.sql.text).df()
         else:
             if schema!="":
-                conn = py_connect_db(schema=schema)
+                if database!="":
+                    conn = py_connect_db(database=database,schema=schema)
+                else:
+                    conn = py_connect_db(schema=schema)
             else:
-                conn = py_connect_db()
+                if database!="":
+                    conn = py_connect_db(database=database)
+                else:               
+                    conn = py_connect_db()
             df = pd.read_sql(self.sql.text, conn)
         # convert any date columns to datetime (altair only works with datetime NOT date)
 

@@ -169,6 +169,15 @@ q.run()  # always runs the query on snowflake
 q.load() # will load from cache if it can, otherwise from snowflake 
 ```
 
+To specify a particular database and schema, you can specify then in .run():
+```
+q.run(database='my_database', schema='my_schema')
+```
+
+so, if you have the same table in different databases and different schemas, BE CAREFUL as .load() only the table
+name is cached.  If in doubt, then use .run()
+
+
 More specifically:
 - load() will return data from a locally cached .csv file, if present, if not then it will call run()
 - run() will run the query on snowflake and then run() will cache the result in a local csv file.
