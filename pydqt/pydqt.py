@@ -26,7 +26,7 @@ class NoDataException(Exception):
 def env_file_full_path():
     return os.path.join(Path(__file__).parents[0],'.env')
 
-def test_data_file_full_path():
+def test_data_file_full_path(dups=True):
     return os.path.join(Path(__file__).parents[0],'test.csv')
 
 def test_data_exists():
@@ -714,7 +714,7 @@ params: {self.params}"""
 
 
 
-    def write_sql(self, table, warehouse=get_warehouse(), database=get_database(), schema=get_schema(), append=False, write_timestamp=True, **kwargs):
+    def write_sql(self, table, warehouse=get_warehouse(), database=get_database(), schema=get_schema(), append=False, write_timestamp=True, unique='',**kwargs):
         """
         writes result to sql table.  Note: only works for Snowflake at the moment.  If the table does not exist
         then one is automatically created, which may result in fields being of an unexpected type (eg dates are 
@@ -787,21 +787,56 @@ params: {self.params}"""
             return table_metadata
 
 
-        def df_to_snowflake_table(table_name, operation, df, conn=conn, **kwargs): 
+        def df_to_snowflake_table(table_name, operation, df, conn=conn, unique=unique, **kwargs): 
             if operation=='create_replace':
                 df.columns = [c.upper() for c in df.columns]
                 table_metadata = get_table_metadata(df,**kwargs)
                 conn.cursor().execute(f"CREATE OR REPLACE TABLE {table_name} ({table_metadata})")
+
+                if unique:
+                    assert unique in df.columns, f'"{unique}" is not in the dataframe columns'
+                    df = df.drop_duplicates(subset=[unique])    
                 write_pandas(conn, df, table_name.upper())
             elif operation=='insert':
+                if unique:
+                    assert unique in df.columns, f'"{unique}" is not in the dataframe columns'
+                    df = df.drop_duplicates(subset=[unique])
+
                 table_rows = str(list(df.itertuples(index=False, name=None))).replace('[','').replace(']','')
-                conn.cursor().execute(f"INSERT INTO {table_name} VALUES {table_rows}")
+
+                if unique:
+                    cols = df.columns
+                    temp_table = f't('
+                    for c in cols:
+                        temp_table+=c+','
+                    temp_table = temp_table[:-1] + ')'                        
+                    sql_statement = f"""
+                        INSERT INTO {table_name}
+                        SELECT *
+                        FROM (VALUES
+                            {table_rows}
+                        ) AS {temp_table}
+                        -- Make sure the table doesn't already contain the IDs we're trying to insert
+                        WHERE {unique} NOT IN (
+                        SELECT {unique} FROM {table_name}
+                        )
+                        -- Make sure the data we're inserting doesn't contain duplicate IDs
+                        -- If it does, only the first record will be inserted (based on the ORDER BY)
+                        -- Ideally, we would want to order by a timestamp to select the latest record
+                        QUALIFY ROW_NUMBER() OVER (
+                        PARTITION BY {unique}
+                        ORDER BY {unique} ASC
+                        ) = 1;
+                    """
+                else:
+                    sql_statement = f"INSERT INTO {table_name} VALUES {table_rows}"
+                conn.cursor().execute(sql_statement)
 
         operation = 'create_replace'
         if append==True:
             operation = 'insert'
 
-        df_to_snowflake_table(table, operation, df, conn=conn, **kwargs)
+        df_to_snowflake_table(table, operation, df, conn=conn, unique=unique, **kwargs)
 
         # success, nchunks, nrows, output  = write_pandas(conn=conn,df=self.df,table_name=table,database=database,schema=schema,overwrite=True,quote_identifiers=False,auto_create_table=True)
 

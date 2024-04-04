@@ -281,6 +281,9 @@ would do:
 query.write_sql("my_table", schema="SCHEMA_NAME", append=False, write_timestamp=False, EVENT_DS="DATE")
 </pre>
 
+You can also specify that a column is unique when writing data.  If inserting records this will check both what is already
+there as well as what is being added.  If not append=False, then a new table is created, in which case only the data being
+added is de-duplicated.  The first record of the specified column sorted in ascending order is the one that is retained.
 
 See write_sql help for more details
 
