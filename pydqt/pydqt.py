@@ -937,7 +937,7 @@ def compile(template='total_aggs.sql',*args,**kwargs):
             pattern = '\'[A-Za-z0-9_.-\/]+\.csv\''
             m=re.findall(pattern, rendered_str)
             if len(m)>0:
-                rendered_str=rendered_str.replace(m[0],f'read_csv_auto({m[0]}, header=true)')
+                rendered_str=rendered_str.replace(m[0],f'read_csv_auto({m[0]}, header=true)')    
             return (False,rendered_str)
         else:
             for key,val in kwargs.items():

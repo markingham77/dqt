@@ -44,6 +44,21 @@ def test_sql_command():
     query.load()
     assert len(query.df)>0  
 
+def test_write_sql_unique_on_append():
+    """
+    tests dqt's writing to sql if unique is specified.  This should prevents any duplicates of a particular column
+    """    
+    query = Query(query="select * from '{{table}}' limit 100;",table=full_path_test_data_file())
+    query.load()
+    df_no_dups = query.df.drop_duplicates(subset=['source'])
+    df_to_append = pd.DataFrame(data=np.array([[pd.to_datetime('2022-01-31'),94,584.37,'US','css'],[pd.to_datetime('2022-03-30'),103,523.10,'NZ','new_source']]),columns=['dates','orders','gmv','region','source'])
+    query.df = pd.concat([df_no_dups, df_to_append]).reset_index(drop=True)
+    query.write_sql("dqt_delme_test",schema="CORE_WIP", database='lyst', append=True, unique='source')
+    query_check = Query(query='select * from dqt_delme_test')
+    query_check.run(schema='core_wip', database='lyst')
+    tf = query_check.df.duplicated(subset=['SOURCE'])
+    assert tf.any()==False
+
 def test_write_sql_create_replace_date():
     """
     tests dqt's writing to sql
@@ -68,20 +83,6 @@ def test_write_sql_append():
     query.load()
     query.write_sql("dqt_delme_test",schema="CORE_WIP", append=True)
 
-def test_write_sql_unique_on_append():
-    """
-    tests dqt's writing to sql if unique is specified.  This should prevents any duplicates of a particular column
-    """    
-    query = Query(query="select * from '{{table}}' limit 100;",table=full_path_test_data_file())
-    query.load()
-    df_no_dups = query.df.drop_duplicates(subset=['source'])
-    df_to_append = pd.DataFrame(data=np.array([[pd.to_datetime('2022-01-31'),94,584.37,'US','css'],[pd.to_datetime('2022-03-30'),103,523.10,'NZ','new_source']]),columns=['dates','orders','gmv','region','source'])
-    query.df = pd.concat([df_no_dups, df_to_append]).reset_index(drop=True)
-    query.write_sql("dqt_delme_test",schema="CORE_WIP", append=True, unique='source')
-    query_check = Query(query='select * from dqt_delme_test')
-    query_check.run(schema='core_wip', database='lyst')
-    tf = query_check.df.duplicated(subset=['SOURCE'])
-    assert tf.any()==False
 
 def test_write_sql_unique_on_create():
     """
