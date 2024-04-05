@@ -460,6 +460,8 @@ class Sql:
 
     def __init__(self, text='',temp_dir = temp_sql_compiled_template_dir()):
         self.text=sqlparse.format(text, reindent=True, keyword_case='upper')
+        # handle ':LANGUAGE' not working
+        self.text = self.text.replace(':LANGUAGE',':language')
         self.temp_dir = temp_dir
         self._remove_temp_sql_files()
 
@@ -938,8 +940,6 @@ def compile(template='total_aggs.sql',*args,**kwargs):
             m=re.findall(pattern, rendered_str)
             if len(m)>0:
                 rendered_str=rendered_str.replace(m[0],f'read_csv_auto({m[0]}, header=true)')    
-            # handle ':language' lower case issue
-            rendered_str = rendered_str.replace(':LANGUAGE',':language')     
             return (False,rendered_str)
         else:
             for key,val in kwargs.items():
@@ -949,7 +949,6 @@ def compile(template='total_aggs.sql',*args,**kwargs):
             m=re.findall(pattern, rendered_str)
             if len(m)>0:
                 rendered_str=rendered_str.replace(m[0],f'read_csv_auto({m[0]}, header=true)')    
-            rendered_str = rendered_str.replace(':LANGUAGE',':language')    
             return (False,rendered_str)            
     else:
         template = environment.get_template(template)
@@ -958,5 +957,4 @@ def compile(template='total_aggs.sql',*args,**kwargs):
         m=re.findall(pattern, rendered_str)
         if len(m)>0:
             rendered_str=rendered_str.replace(m[0],f'read_csv_auto({m[0]}, header=true)')    
-        rendered_str = rendered_str.replace(':LANGUAGE',':language')    
         return (True,rendered_str)

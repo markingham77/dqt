@@ -44,6 +44,19 @@ def test_sql_command():
     query.load()
     assert len(query.df)>0  
 
+def test_write_sql_unique_on_create():
+    """
+    tests dqt's writing to sql if unique is specified.  This should prevents any duplicates of a particular column
+    """    
+    query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
+    query.load()
+    query.write_sql("dqt_delme_test",schema="CORE_WIP", append=False, unique='SOURCE')
+    query_check = Query(query='select * from dqt_delme_test')
+    query_check.run(schema='core_wip', database='lyst')
+    tf = query_check.df.duplicated(subset=['SOURCE'])
+    assert tf.any()==False
+
+
 def test_write_sql_unique_on_append():
     """
     tests dqt's writing to sql if unique is specified.  This should prevents any duplicates of a particular column
@@ -82,19 +95,6 @@ def test_write_sql_append():
     query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
     query.load()
     query.write_sql("dqt_delme_test",schema="CORE_WIP", append=True)
-
-
-def test_write_sql_unique_on_create():
-    """
-    tests dqt's writing to sql if unique is specified.  This should prevents any duplicates of a particular column
-    """    
-    query = Query(query="select * from '{{table}}' limit 10;",table=full_path_test_data_file())
-    query.load()
-    query.write_sql("dqt_delme_test",schema="CORE_WIP", append=False, unique='SOURCE')
-    query_check = Query(query='select * from dqt_delme_test')
-    query_check.run(schema='core_wip', database='lyst')
-    tf = query_check.df.duplicated(subset=['SOURCE'])
-    assert tf.any()==False
 
 def test_macro():
     """
