@@ -44,6 +44,7 @@ SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
 SNOWFLAKE_DEFAULT_DATABASE = ''
 SNOWFLAKE_DEFAULT_SCHEMA = ''
+SNOWFLAKE_PASSWORD = ''
 WORKSPACE_ROOT = ''
 WORKSPACE_NAME = ''
 ```
@@ -56,7 +57,7 @@ from pydqt import env_reload
 env_reload()
 ```
 
-The SNOWFLAKE credentials are only necessary if you want to query snowflake and the .env should not be committed to a repo.  Without the .env variables, PYDQT will still work fine with local data.
+The SNOWFLAKE credentials are only necessary if you want to query snowflake and the .env should not be committed to a repo.  Without the .env variables, PYDQT will still work fine with local data.  If you donot specify a password then authentication defaults to "externalbrowser" which uses Google SSO.
 
 ## Testing
 PYDQT comes with some tests, which can be run from within vscode or the command line.  They use pytest so if running from vscode, ensure that you configure the pytest framework.  From the command line (ensure you're in the root of the project) type:
