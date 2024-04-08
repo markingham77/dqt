@@ -261,6 +261,7 @@ def setup_env():
         with open(filename,'w') as f:
             f.write("""SNOWFLAKE_LOGIN = ''
 SNOWFLAKE_ROLE = ''
+SNOWFLAKE_PASSWORD = ''                    
 SNOWFLAKE_DEFAULT_DATABASE = ''
 SNOWFLAKE_DEFAULT_SCHEMA = ''
 WORKSPACE_ROOT = ''
@@ -270,6 +271,7 @@ WORKSPACE_NAME = ''""")
         found_role = False
         found_db = False
         found_schema = False
+        found_password = False
         with open(filename,'r') as f:        
             for line in f:
                 if line.startswith("SNOWFLAKE_DEFAULT_DATABASE"):
@@ -280,6 +282,8 @@ WORKSPACE_NAME = ''""")
                     found_login = True
                 elif line.startswith("SNOWFLAKE_ROLE"):
                     found_role = True
+                elif line.startswith("SNOWFLAKE_PASSWORD"):
+                    found_password = True
         if not found_db:
             with open(filename, 'a') as f:
                 f.write("\nSNOWFLAKE_DEFAULT_DATABASE = ''")
@@ -292,6 +296,9 @@ WORKSPACE_NAME = ''""")
         if not found_role:
             with open(filename, 'a') as f:
                 f.write("\nSNOWFLAKE_ROLE = ''")
+        if not found_password:
+            with open(filename, 'a') as f:
+                f.write("\nSNOWFLAKE_PASSWORD = ''")
                 
 
 
@@ -325,9 +332,10 @@ def py_connect_db(warehouse = get_warehouse(), database=get_database(), schema=g
                     f"Failed. Please set {var}=<lyst email> & SNOWFLAKE_ROLE in your .env file"
                 )
             else:
-                raise EnvironmentError(
-                    f"Failed. Please set {var} in your .env file - via env_edit()"
-                )
+                if var!="SNOWFLAKE_PASSWORD":
+                    raise EnvironmentError(
+                        f"Failed. Please set {var} in your .env file - via env_edit()"
+                    )
         else:    
             if os.environ[var]=='':
                 if var == "SNOWFLAKE_LOGIN":
@@ -335,20 +343,13 @@ def py_connect_db(warehouse = get_warehouse(), database=get_database(), schema=g
                         f"Failed. Please set {var}=<lyst email> & SNOWFLAKE_ROLE in your .env file"
                     )
                 else:
-                    raise EnvironmentError(
-                        f"Failed. Please set {var} in your .env file - via env_edit()"
-                    )
+                    if var!="SNOWFLAKE_PASSWORD":
+                        raise EnvironmentError(
+                            f"Failed. Please set {var} in your .env file - via env_edit()"
+                        )
 
     for var in ["SNOWFLAKE_LOGIN", "SNOWFLAKE_ROLE", "SNOWFLAKE_DEFAULT_DATABASE", "SNOWFLAKE_DEFAULT_SCHEMA"]:
         check_env_var(var)
-    # if "SNOWFLAKE_LOGIN" not in os.environ:
-    #     raise EnvironmentError(
-    #         "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
-    #     )
-    # if os.environ["SNOWFLAKE_LOGIN"]=='':
-    #     raise EnvironmentError(
-    #         "Failed. Please set SNOWFLAKE_LOGIN=<lyst email> & SNOWFLAKE_ROLE in your .env file"
-    #     )
 
     # Now have default values in function definition, above
     SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
@@ -359,16 +360,35 @@ def py_connect_db(warehouse = get_warehouse(), database=get_database(), schema=g
     # if not schema:
     #     schema = os.getenv("SNOWFLAKE_DEFAULT_SCHEMA")
 
-    return snowflake.connector.connect(
-        account="fs67922.eu-west-1",
-        user=os.getenv("SNOWFLAKE_LOGIN"),
-        authenticator="externalbrowser",
-        database=database,
-        schema=schema,
-        role=SNOWFLAKE_ROLE,
-        warehouse=warehouse,
-        client_session_keep_alive=True,
-    );
+    password=''
+    if "SNOWFLAKE_PASSWORD" in os.environ:
+        password = os.getenv("SNOWFLAKE_PASSWORD")
+
+
+
+    if password:
+        return snowflake.connector.connect(
+            account="fs67922.eu-west-1",
+            user=os.getenv("SNOWFLAKE_LOGIN"),
+            password=password,
+            database=database,
+            schema=schema,
+            role=SNOWFLAKE_ROLE,
+            warehouse=warehouse,
+            client_session_keep_alive=True,
+        );
+    else:
+        return snowflake.connector.connect(
+            account="fs67922.eu-west-1",
+            user=os.getenv("SNOWFLAKE_LOGIN"),
+            authenticator="externalbrowser",
+            database=database,
+            schema=schema,
+            role=SNOWFLAKE_ROLE,
+            warehouse=warehouse,
+            client_session_keep_alive=True,
+        );
+
 
 
 def files_are_equal(f1,f2) -> bool:
@@ -829,7 +849,7 @@ params: {self.params}"""
                         PARTITION BY {unique}
                         ORDER BY {unique} ASC
                         ) = 1;
-                    """
+                    """                    
                 else:
                     sql_statement = f"INSERT INTO {table_name} VALUES {table_rows}"
                 conn.cursor().execute(sql_statement)
