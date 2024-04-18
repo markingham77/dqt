@@ -353,8 +353,8 @@ def py_connect_db(warehouse = get_warehouse(), database=get_database(), schema=g
 
     # Now have default values in function definition, above
     SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
-    # if not warehouse:
-    #     warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
+    if not warehouse:
+        warehouse=f"{SNOWFLAKE_ROLE}_QUERY_LARGE_WH"
     # if not database:
     #     database = os.getenv("SNOWFLAKE_DEFAULT_DATABASE")
     # if not schema:
